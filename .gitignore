@@ -1,0 +1,6 @@
+tsv_extracted_from_wikidata/*
+__pycache__/
+tmp_extracted_data/
+merge_KB/output/
+merge_KB/secapi/
+
