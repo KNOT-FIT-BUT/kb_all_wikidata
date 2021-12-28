@@ -10,7 +10,7 @@
 project_folder="$(readlink -f $0 | xargs -I{} dirname {})"
 wikidata2="$(echo "$project_folder" | xargs -I{} dirname {})"
 entity_kb_czech9=/mnt/minerva1/nlp/projects/entity_kb_czech9
-kb_compare="$project_folder"/kb_all_merge/tools/kb_compare.py
+kb_compare="$project_folder"/kb_tools/kb_compare.py
 
 # list dump names
 if [ "$1" = "--list" ]; then
