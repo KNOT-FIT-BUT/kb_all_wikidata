@@ -43,6 +43,13 @@ def get_args():
         action='store_true'
     )
     argparser.add_argument(
+        '--remove-missing',
+        help='Remove ids with missing translation instead of keeping them in KB unchanged.',
+        required=False,
+        default=False,
+        action='store_true'
+    )
+    argparser.add_argument(
         '--min-field',
         help='Index of first field where id will be substituted.',
         required=False,
@@ -76,7 +83,8 @@ def main():
         dict_file=args.dict_file,
         output_file=args.output_file,
         show_missing=args.show_missing,
-        exclude=args.exclude
+        exclude=args.exclude,
+        remove_missing=args.remove_missing
     )
     try:
         name_changer.substitute_names()

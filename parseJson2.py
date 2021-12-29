@@ -382,7 +382,8 @@ class WikidataNameInterchanger(WikidataDumpManipulator):
                  dictionary=None,
                  dump=None,
                  show_missing=False,
-                 exclude=(0, 8, 9, 10, 11)
+                 exclude=(0, 8, 9, 10, 11),
+                 remove_missing=False
                  ):
         # files
         self.output_file = output_file  # output file where translated data will be written to
@@ -397,6 +398,9 @@ class WikidataNameInterchanger(WikidataDumpManipulator):
         # ids without translation are added to this list if show_missing == True
         # id without translation is any id from kb that is not found in dictionary
         self.ids_without_translation = []
+
+        # removes ids with missing name instead of keeping them in KB
+        self.remove_missing = remove_missing
 
         # excluded field indexes
         self.excluded = exclude  # array or tuple of indexes of fields where names will not be substituted
@@ -438,15 +442,23 @@ class WikidataNameInterchanger(WikidataDumpManipulator):
             for i in range(len(line)):
                 if i in self.excluded:  # skip entity id, urls, file names, etc. (indexes defined in self.excluded)
                     continue
-                entity_ids = re.findall('Q\d+', line[i])  # match all ids on line
-                # sort ids from longest to shortest (otherwise shorter id will replace first part of longer)
-                entity_ids.sort(key=lambda x: len(x), reverse=True)
-                for entity_id in entity_ids:  # replace id by name matched by dictionary
-                    try:
-                        line[i] = line[i].replace(entity_id, self.dictionary[entity_id])
+                values = line[i].split('|')  # split multiple value fields
+                results = []  # id translations
+                for value in values:
+                    # values that are not wikidata ids are directly added to the results
+                    if not re.fullmatch('^Q\d+$', value):
+                        results.append(value)
+                        continue
+
+                    try:  # translate id
+                        results.append(self.dictionary[value])
                     except KeyError:  # entity name is not in dictionary
-                        if self.show_missing and entity_id not in self.ids_without_translation:
-                            self.ids_without_translation.append(entity_id)
+                        if self.show_missing and value not in self.ids_without_translation:
+                            self.ids_without_translation.append(value)
+                        # add id to result if ids with missing translation should not be removed
+                        if not self.remove_missing:
+                            results.append(value)
+                line[i] = '|'.join(results)  # join results back to line field
             self.write_entity_to_tsv(line, self.output_file)
 
         return 0

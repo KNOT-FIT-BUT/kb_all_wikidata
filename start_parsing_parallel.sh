@@ -158,7 +158,8 @@ if [ \"{}\" != \"dict.tsv\" ] ; then
   -d \"$project_folder\"/tmp_extracted_data/\"$dump_name\"/dict.tsv \
   -f \"$project_folder\"/tmp_extracted_data/\"$dump_name\"/\"{}\" \
   -o \"$project_folder\"/tsv_extracted_from_wikidata/\"$dump_name\"/\"`echo "$dump_name" | sed 's/-all.json//'`\"-\"$lang\"-\"{.}\".tsv \
-  -e 0 8 9 10 11
+  -e 0 8 9 10 11 \
+  --remove-missing
 fi
 "
 substitution_end=`timestamp`
@@ -175,7 +176,6 @@ echo "Parsing time: `show_time "$parsing_time"`"
 echo "Collection time: `show_time "$collecting_time"`"
 echo "Substitution time: `show_time "$substitution_time"`"
 echo "Total time: `show_time "$total_time"`"
-
 
 echo "Generating TC and expanding instances."
 sh "$project_folder"/expand_instances.sh "$dump_name" "$project_folder" "$lang"

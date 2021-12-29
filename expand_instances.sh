@@ -145,7 +145,8 @@ if [ \"{}\" != \"dict.tsv\" ] ; then
   -d \"$project_folder\"/tmp_extracted_data/\"$dump_name\"/dict.tsv \
   -f /tmp/\"$USER\"/expanded_instance_kb/\"$dump_name\"/\"{}\" \
   -o /tmp/\"$USER\"/expanded_instance_kb/\"$dump_name\"/\"{.}\".name_substituted.tsv \
-  -e 0 8 9 10 11
+  -e 0 8 9 10 11 \
+  --remove-missing
 fi
 "
 kb_substitution_end=`timestamp`

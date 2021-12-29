@@ -1,6 +1,11 @@
+# exclude generated results
 tsv_extracted_from_wikidata/*
-__pycache__/
-tmp_extracted_data/
 merge_KB/output/
-merge_KB/secapi/
+tmp_extracted_data/
+
+# exclude python cache
+__pycache__/
+
+# exclude generated log files
+*.log
 

@@ -99,13 +99,13 @@ python3 "$kb_compare" \
       --rel_conf wikidata2_entity_kb_rel.conf \
       --output_conf wikidata2_output.conf \
       --other_output_conf wikidata2_other_output.conf \
-      --output artists_merged \
+      --output artists_merged.tsv \
       --treshold 100
 
 # Subtract all artists from persons KB
-awk -F'\t' 'NR==FNR{ id[$1]++; next }; (!(id[$1])){ print }' artists_merged WIKIDATA2_PERSONS_ALL > persons_unmerged
+awk -F'\t' 'NR==FNR{ id[$1]++; next }; (!(id[$1])){ print }' artists_merged.tsv WIKIDATA2_PERSONS_ALL > persons_unmerged.tsv
 
-mv -t "$project_folder"/output/ artists_merged persons_unmerged
+mv -t "$project_folder"/output/ artists_merged.tsv persons_unmerged.tsv
 rm WIKIDATA2_PERSONS ENTITY_KB_CZECH9 PERSONS_ARTISTS_MERGED WIKIDATA2 WIKIDATA2_PERSONS_ALL
 
 # merge
@@ -120,10 +120,14 @@ for type in events organizations; do
 	      --rel_conf wikidata2_entity_kb_rel.conf \
 	      --output_conf wikidata2_output.conf \
 	      --other_output_conf wikidata2_other_output.conf \
-	      --output "$type"_merged \
+	      --output "$type"_merged.tsv \
 	      --treshold 100
-	mv -t "$project_folder"/output/ "$type"_merged
+	mv -t "$project_folder"/output/ "$type"_merged.tsv
 	rm WIKIDATA2 ENTITY_KB_CZECH9
 done
+
+# merge files into KB
+sh "$project_folder"/mkkb.sh "$dump_name"
+
 cd "$cf" # restore location
 
