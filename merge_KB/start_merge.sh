@@ -9,7 +9,7 @@
 # constants
 project_folder="$(readlink -f $0 | xargs -I{} dirname {})"
 wikidata2="$(echo "$project_folder" | xargs -I{} dirname {})"
-entity_kb_czech9=/mnt/minerva1/nlp/projects/entity_kb_czech9
+#entity_kb_czech9=/mnt/minerva1/nlp/projects/entity_kb_czech9
 kb_compare="$project_folder"/kb_tools/kb_compare.py
 
 # list dump names
@@ -49,9 +49,10 @@ wikidata_arist="$wikidata2"/tsv_extracted_from_wikidata/"$dump_name"/"`echo "$du
 wikidata_event="$wikidata2"/tsv_extracted_from_wikidata/"$dump_name"/"`echo "$dump_name" | sed 's/-all.json//'`"-cs-event.tsv
 wikidata_organization="$wikidata2"/tsv_extracted_from_wikidata/"$dump_name"/"`echo "$dump_name" | sed 's/-all.json//'`"-cs-organization.tsv
 
-entity_kb_czech9_artist="$entity_kb_czech9"/final/vizual_umelci
-entity_kb_czech9_event="$entity_kb_czech9"/final/udalosti
-entity_kb_czech9_organization="$entity_kb_czech9"/final/organizace
+# TODO changed paths - check if it works with them
+entity_kb_czech9_artist="$wikidata2"/additional_types/final/vizual_umelci
+entity_kb_czech9_event="$wikidata2"/additional_types/final/udalosti
+entity_kb_czech9_organization="$wikidata2"/additional_types/final/organizace
 
 for t in artist event organization; do
 	if [ ! -f "$(eval echo "\$entity_kb_czech9_$t")" ]; then
