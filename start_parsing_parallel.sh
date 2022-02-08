@@ -66,6 +66,7 @@ fi
 # parse json dump
 echo "Parsing started"
 parsing_start=`timestamp`
+ssh-keyscan -f "${project_folder}/config/hosts.list" >> ~/.ssh/known_hosts
 parallel-ssh -h "$project_folder"/config/hosts.list -p 100 -t 0 -i \
 "[ -d \"$dump_folder\"/\"$dump_name\" ] && [ -r \"$dump_folder\"/\"$dump_name\" ] && [ -x \"$dump_folder\"/\"$dump_name\" ] || { echo \"Can't read data from \"$dump_folder\"/\"$dump_name\"\" && exit 1; }; \
 [ -d /tmp/\"$USER\" ] && [ -w /tmp/\"$USER\" ] || mkdir /tmp/\"$USER\";\
