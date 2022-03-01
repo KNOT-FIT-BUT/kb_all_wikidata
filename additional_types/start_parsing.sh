@@ -96,12 +96,12 @@ then
 fi
 
 # Run wikidata json dump extractor to create new KB
-CMD="python3 $PWD/additional_types/ent_parser.py --dump \"${DUMP_PATH}\" --final 2>entities_processing.log"
+CMD="python3 $PWD/ent_parser.py --dump \"${DUMP_PATH}\" --final 2>entities_processing.log"
 echo "RUNNING COMMAND: ${CMD}"
 eval $CMD
 
 # Run script to download images
-CMD="python3 $PWD/additional_types/download_images.py"
+CMD="python3 $PWD/download_images.py"
 echo "RUNNING COMMAND: ${CMD}"
 eval $CMD
 
