@@ -5,6 +5,8 @@
 #              Merges extracted data with data from entity_kb_czech9.
 # project: wikidata2
 # author: Pavel Raur (xraurp00@stud.fit.vutbr.cz)
+# edited by: René Rešetár (xreset00@stud.fit.vutbr.cz)
+# added extraction from entity_kb_czech9 project
 
 project_folder="$(readlink -f $0 | xargs -I{} dirname {})"
 export project_folder
@@ -56,6 +58,16 @@ parser_error_code=$?
 if [ $parser_error_code -ne 0 ]; then
   echo "Dump extraction failed!" >&2
   exit $parser_error_code
+fi
+
+# change parser and start extraction
+dump_parser="$project_folder"/additional_types/start_parsing.sh
+sh "$dump_parser" -d "$dump_name"
+ent9_parser_error_code=$?
+
+if [ $ent9_parser_error_code -ne 0 ]; then
+  echo "Dump extraction from entity_kb_czech9 failed!" >&2
+  exit $ent9_parser_error_code
 fi
 
 # merge dump with entity_kb_czech9
