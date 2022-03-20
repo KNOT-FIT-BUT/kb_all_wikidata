@@ -11,15 +11,80 @@ export project_folder
 
 dump_parser="$project_folder"/start_parsing_parallel.sh
 merge_script="$project_folder"/merge_KB/start_merge.sh
+mkkb_script="$project_folder"/merge_KB/mkkb.sh
 
-if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+list_dumps=false
+dump_name=''
+print_help=false
+lang='cs'
+unknown=''  # unknown parameters
+
+# parse params
+while true; do
+  case "$1" in
+    --help|-h )
+      print_help=true
+      shift
+      ;;
+    --list|-l )
+      list_dumps=true
+      shift
+      ;;
+    --dump|-d )
+      dump_name="$2"
+      if [ -z "$2" ]; then
+        echo "Dump name missing"'!' >&2
+        exit 1
+      fi
+      shift 2
+      ;;
+    --dump=* )
+      dump_name="$(echo "$1" | awk -F'=' '{ print $2 }')"
+      shift
+      ;;
+    -d* )
+      dump_name="$(echo "$1" | sed 's/^..\(.*\)/\1/')"
+      shift
+      ;;
+    --lang|-g )
+      lang="$2"
+      if [ -z "$2" ]; then
+        echo "Specify the language"'!'
+        exit 1
+      fi
+      shift 2
+      ;;
+    --lang=* )
+      lang="$(echo "$1" | awk -F'=' '{ print $2 }')"
+      shift
+      ;;
+    -g* )
+      lang="$(echo "$1" | sed 's/^..\(.*\)/\1/')"
+      shift
+      ;;
+    * )
+      unknown="$1"
+      break
+      ;;
+  esac
+done
+
+if [ -n "$unknown" ]; then
+  echo "Unknown argument $unknown"'!' >&2
+  exit 1
+fi
+
+if $print_help; then
   echo "Usage:"
   echo "  sh start_extraction.sh"
-  echo "  sh start_extraction.sh dump_name"
+  echo "  sh start_extraction.sh --dump dump_name --lang cs"
   echo "Arguments:"
-  echo "  dump_name     Name of the dump to process. If not supplied,"
+  echo "  --dump|-d     Name of the dump to process. If not supplied,"
   echo "                newest available dump is used automatically."
-  echo "  --list        Prints list of dump available for processing."
+  echo "  --lang|-g     Selects language of the extracted KB. Default"
+  echo "                language is czech (cs)."
+  echo "  --list|-l     Prints list of dump available for processing."
+  echo "  --help|-h     Prints help."
   echo "Description:"
   echo "  Starts extraction of wikidata dump and merges resulting data"
   echo "  with data from entity_kb_czech9 project."
@@ -30,41 +95,69 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
 fi
 
 # print available dumps
-if [ "$1" = "--list" ]; then
+if $list_dumps; then
   sh "$dump_parser" --list
   exit $?
 fi
 
-# select dump to process
-if [ -n "$1" ]; then
-  # select dump from argument
-  dump_name="$1"
-else
-  # select newest dump available if not selected by user
+# select dump to process, if not selected by user
+if [ -z "$dump_name" ]; then
+  # select newest dump available
   dump_name="$(sh "$dump_parser" --list | tail -n1 | grep -v 'Available dumps:')"
   # check if dump was selected
   if [ -z "$dump_name" ]; then
     echo "No dump available for extraction!" >&2
     exit 1
   fi
+  echo "Selected dump: $dump_name"
+fi
+
+output_path="$project_folder"/tsv_extracted_from_wikidata/"$dump_name"/
+persons_file="$output_path"/"$(echo "$dump_name" | sed 's/-all.json//')"-"$lang"-person.tsv
+group_file="$output_path"/"$(echo "$dump_name" | sed 's/-all.json//')"-"$lang"-group.tsv
+artist_file="$output_path"/"$(echo "$dump_name" | sed 's/-all.json//')"-"$lang"-artist.tsv
+geographical_file="$output_path"/"$(echo "$dump_name" | sed 's/-all.json//')"-"$lang"-geographical.tsv
+event_file="$output_path"/"$(echo "$dump_name" | sed 's/-all.json//')"-"$lang"-event.tsv
+organization_file="$output_path"/"$(echo "$dump_name" | sed 's/-all.json//')"-"$lang"-organization.tsv
+
+# print warning about extraction of other than czech language
+if [ "$lang" != 'cs' ]; then
+  echo "Selected language is $lang"'!' >&2
+  echo 'This language might not be supported by all merged KBs!' >&2
 fi
 
 # start dump extraction
-sh "$dump_parser" "$dump_name" cs
+sh "$dump_parser" "$dump_name" "$lang"
 parser_error_code=$?
 
 if [ $parser_error_code -ne 0 ]; then
   echo "Dump extraction failed!" >&2
   exit $parser_error_code
 fi
+if [ "$lang" = 'cs' ]; then
+  # merge dump with entity_kb_czech9
+  sh "$merge_script" -d "$dump_name" -g "$lang"
+  merge_error_code=$?
 
-# merge dump with entity_kb_czech9
-sh "$merge_script" "$dump_name"
-merge_error_code=$?
-
-if [ $merge_error_code -ne 0 ]; then
-  echo "Merging with entity_kb_czech9 failed!" >&2
-  exit $merge_error_code
+  if [ $merge_error_code -ne 0 ]; then
+    echo "Merging with entity_kb_czech9 failed!" >&2
+    exit $merge_error_code
+  fi
+else
+  echo "Merging with entity_kb_czech9 skipped"'!'
+  echo "Selected language is not supported"'!'
+  echo "Generating KB without entity_kb_czech9"
+  sh "$mkkb_script" -p "$persons_file"        \
+                    -g "$group_file"          \
+                    -a "$artist_file"         \
+                    -l "$geographical_file"   \
+                    -e "$event_file"          \
+                    -o "$organization_file"
+  mkkb_error_code=$?
+  if [ $mkkb_error_code -ne 0 ]; then
+    echo 'KB creation failed!' >&2
+    exit $mkkb_error_code
+  fi
 fi
 
 # Extraction complete
