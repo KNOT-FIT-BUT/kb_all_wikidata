@@ -12,8 +12,83 @@ wikidata2="$(echo "$project_folder" | xargs -I{} dirname {})"
 entity_kb_czech9=/mnt/minerva1/nlp/projects/entity_kb_czech9
 kb_compare="$project_folder"/kb_tools/kb_compare.py
 
+# args
+list_dumps=false
+print_help=false
+dump_name=''
+lang='cs'
+unknown=''
+
+# parse params
+while true; do
+	case "$1" in
+		--help|-h )
+			print_help=true
+			shift
+			;;
+		--list|-l )
+			list_dumps=true
+			shift
+			;;
+		--dump|-d )
+			dump_name="$2"
+			if [ -z "$2" ]; then
+				echo "Dump name missing"'!' >&2
+				exit 1
+			fi
+			shift 2
+			;;
+		--dump=* )
+			dump_name="$(echo "$1" | awk -F'=' '{ print $2 }')"
+			shift
+			;;
+		-d* )
+			dump_name="$(echo "$1" | sed 's/^..\(.*\)/\1/')"
+			shift
+			;;
+		--lang|-g )
+			lang="$2"
+			if [ -z "$2" ]; then
+				echo "Specify the language"'!'
+				exit 1
+			fi
+			shift 2
+			;;
+		--lang=* )
+			lang="$(echo "$1" | awk -F'=' '{ print $2 }')"
+			shift
+			;;
+		-g* )
+			lang="$(echo "$1" | sed 's/^..\(.*\)/\1/')"
+			shift
+			;;
+		* )
+			unknown="$1"
+			break
+			;;
+	esac
+done
+
+# help
+if $print_help; then
+	echo "Usage:"
+	echo "  sh start_merge.sh [ --dump DUMP_NAME] [ --lang LANGUAGE ]"
+	echo "Example:"
+	echo "  sh start_merge.sh --dump=wikidata-20210301-all.json"
+	echo "Arguments:"
+	echo "  --dump|-d  Name of dump to merge. Dump name is name of folder in"
+	echo "             $wikidata2/tsv_extracted_from_wikidata/"
+	echo "             Default dump is the latest one."
+	echo "  --lang|-g  Language of the merged kb. Default is czech (cs)."
+	echo "  --list|-l  List available dumps."
+	echo "  --help|-h  Print help."
+	echo "Description:"
+	echo "  Merges data from wikidata2 and entity_kb_czech9 projects."
+	exit 0
+fi
+
 # list dump names
-if [ "$1" = "--list" ]; then
+if $list_dumps; then
 	echo "Available dumps:"
 	for f in $(ls "$wikidata2"/tsv_extracted_from_wikidata/);
 	do
@@ -22,32 +97,29 @@ if [ "$1" = "--list" ]; then
 	exit 0
 fi
 
-# help
-if [ "$1" = "--help" ]; then
-	echo "Usage:"
-	echo "  sh start_merge.sh [ wikidata_dump_name ]"
-	echo "Example:"
-	echo "  sh start_merge.sh wikidata-20210301-all.json"
-	echo "Description:"
-	echo "  Dump name is name of folder in $wikidata2/tsv_extracted_from_wikidata/"
-	echo "  When '--list' argument is used list of available dumps is printed."
-	echo "  If no arguments are used latest available dump is used."
-	exit 0
-fi
-
 # if no dump is specified - use lates one (last in list)
-if [ -z "$1" ]; then
+if [ -z "$dump_name" ]; then
 	dump_name="$(sh "$0" --list | tail -n1)"
-else # dump name is passed in
-	dump_name="$1"
 fi
 
-[ -d "$wikidata2"/tsv_extracted_from_wikidata/"$dump_name" ] || { echo "Dump $dump_name not available"'!'; exit 1; }
+# pring language warning
+if [ "$lang" != 'cs' ]; then
+	echo "Selected language is $lang"'!' >&2
+	echo 'This language might not be supported by all merged KBs!' >&2
+fi
 
-wikidata_person="$wikidata2"/tsv_extracted_from_wikidata/"$dump_name"/"`echo "$dump_name" | sed 's/-all.json//'`"-cs-person.tsv
-wikidata_arist="$wikidata2"/tsv_extracted_from_wikidata/"$dump_name"/"`echo "$dump_name" | sed 's/-all.json//'`"-cs-artist.tsv
-wikidata_event="$wikidata2"/tsv_extracted_from_wikidata/"$dump_name"/"`echo "$dump_name" | sed 's/-all.json//'`"-cs-event.tsv
-wikidata_organization="$wikidata2"/tsv_extracted_from_wikidata/"$dump_name"/"`echo "$dump_name" | sed 's/-all.json//'`"-cs-organization.tsv
+[ -d "$wikidata2"/tsv_extracted_from_wikidata/"$dump_name" ] || { echo "Dump $dump_name not available"'!' >&2; exit 1; }
+
+wikidata_person="$wikidata2"/tsv_extracted_from_wikidata/"$dump_name"/"`echo "$dump_name" | sed 's/-all.json//'`"-"$lang"-person.tsv
+wikidata_arist="$wikidata2"/tsv_extracted_from_wikidata/"$dump_name"/"`echo "$dump_name" | sed 's/-all.json//'`"-"$lang"-artist.tsv
+wikidata_event="$wikidata2"/tsv_extracted_from_wikidata/"$dump_name"/"`echo "$dump_name" | sed 's/-all.json//'`"-"$lang"-event.tsv
+wikidata_organization="$wikidata2"/tsv_extracted_from_wikidata/"$dump_name"/"`echo "$dump_name" | sed 's/-all.json//'`"-"$lang"-organization.tsv
+
+# unmerged data
+wikidata_groups="$wikidata2"/tsv_extracted_from_wikidata/"$dump_name"/"`echo "$dump_name" | sed 's/-all.json//'`"-"$lang"-group.tsv
+wikidata_geographical="$wikidata2"/tsv_extracted_from_wikidata/"$dump_name"/"`echo "$dump_name" | sed 's/-all.json//'`"-"$lang"-geographical.tsv
+
+[ -f "$wikidata_person" ] || { echo "No data for selected language"'!' >&2; exit 1; }
 
 entity_kb_czech9_artist="$entity_kb_czech9"/final/vizual_umelci
 entity_kb_czech9_event="$entity_kb_czech9"/final/udalosti
@@ -61,6 +133,7 @@ for t in artist event organization; do
 done
 
 # setup
+[ -d "$project_folder"/output ] || mkdir "$project_folder"/output  # create output folder
 # entity_kb_czech9
 cp "$entity_kb_czech9_artist" "$project_folder"/artists/ENTITY_KB_CZECH9
 cp "$entity_kb_czech9_event" "$project_folder"/events/ENTITY_KB_CZECH9
@@ -72,9 +145,12 @@ sed -f "$project_folder"/remove_prefix.sed "$wikidata_arist" > "$project_folder"
 sed -f "$project_folder"/remove_prefix.sed "$wikidata_organization" > "$project_folder"/organizations/WIKIDATA2
 sed -f "$project_folder"/remove_prefix.sed "$wikidata_event" > "$project_folder"/events/WIKIDATA2
 
+# copy unmerged files
+sed -f "$project_folder"/remove_prefix.sed "$wikidata_groups" > "$project_folder"/output/groups_wikidata2.tsv
+sed -f "$project_folder"/remove_prefix.sed "$wikidata_geographical" > "$project_folder"/output/geographical_wikidata2.tsv
+
 # start merge
 cf="$pwd" # save location
-[ -d "$project_folder"/output ] || mkdir "$project_folder"/output  # create output folder
 cd "$project_folder"/artists/
 # select artists by id from wikidata2 persons
 awk -F'\t' 'NR==FNR{ id[$1]++; next } (id[$1]){ print }' ENTITY_KB_CZECH9 WIKIDATA2_PERSONS_ALL > WIKIDATA2_PERSONS
@@ -127,7 +203,7 @@ for type in events organizations; do
 done
 
 # merge files into KB
-sh "$project_folder"/mkkb.sh "$dump_name"
+sh "$project_folder"/mkkb.sh
 
 cd "$cf" # restore location
 
