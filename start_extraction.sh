@@ -152,7 +152,10 @@ else
                     -a "$artist_file"         \
                     -l "$geographical_file"   \
                     -e "$event_file"          \
-                    -o "$organization_file"
+                    -o "$organization_file"   \
+                    --dump=${dump_name}       \
+                    --lang=${lang}
+
   mkkb_error_code=$?
   if [ $mkkb_error_code -ne 0 ]; then
     echo 'KB creation failed!' >&2

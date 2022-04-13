@@ -203,7 +203,7 @@ for type in events organizations; do
 done
 
 # merge files into KB
-sh "$project_folder"/mkkb.sh
+sh "$project_folder"/mkkb.sh --dump=${dump_name} --lang=${lang}
 
 cd "$cf" # restore location
 
