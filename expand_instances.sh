@@ -25,6 +25,8 @@ export lang="$3"
 # Include timestamp functions
 . "$project_folder"/timestamp.sh
 
+. "${project_folder}/global_vars.sh"
+
 # create folder where classes will be stored
 if [ ! -d "$project_folder"/tmp_extracted_data/classes ]; then
   mkdir "$project_folder"/tmp_extracted_data/classes/
@@ -98,18 +100,36 @@ echo "Collecting instances from nodes"
 collection_start=`timestamp`
 cat "$project_folder"/config/hosts.list | while read host; do
   printf "%s" "Collecting instances from $host ... "
-  ssh "$host" bash -s "$dump_name" "$project_folder" "$(cat /etc/hostname)" << 'END'
+  ssh -4 "$host" bash -s "$dump_name" "$project_folder" "$(cat /etc/hostname)" $(cat ${project_folder}/${FILE_MASTER_IPS}) << 'END'
   dump_name=$1
   project_folder=$2
-  master_node="$3"
+  master_destinations=("${@:3}")
   cd /tmp/"$USER"/"$dump_name"
   files="`ls | awk -F'_' '{ if($1=="instances") print }' | awk -F'.' '{ if($4=="tsv") print }'`"
   echo "$files" | while read fn; do
-    rsync "$fn" "$master_node":/tmp/"$USER"/instances/"$dump_name"/
+    cmd="rsync \"$fn\" \"\$master_dst\":/tmp/\"$USER\"/instances/\"$dump_name\"/"
+    for master_dst in "${master_destinations[@]}"
+    do
+      echo "[`date "+%Y-%m-%d %H:%M:%S.%N"`]   RSYNC \"${fn}\" to master destination \"${master_dst}\".."
+      eval $cmd
+      if test "$?" == 0
+      then
+        break
+      fi
+    done
   done
   files="`ls | awk -F'_' '{ if($1=="expanded" && $2=="instances") print }' | awk -F'.' '{ if($4=="processed" && $5=="tsv") print }'`"
   echo "$files" | while read fn; do
-    rsync "$fn" "$master_node":/tmp/"$USER"/expanded_instance_kb/"$dump_name"/
+    cmd="rsync \"$fn\" \"\$master_dst\":/tmp/\"$USER\"/expanded_instance_kb/\"$dump_name\"/"
+    for master_dst in "${master_destinations[@]}"
+    do
+      echo "[`date "+%Y-%m-%d %H:%M:%S.%N"`]   RSYNC \"${fn}\" to master destination \"${master_dst}\".."
+      eval $cmd
+      if test "$?" == 0
+      then
+        break
+      fi
+    done
   done
 END
 if [ $? -eq 0 ]; then

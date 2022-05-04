@@ -13,6 +13,8 @@ export project_folder
 # setup folder where dumps part are located
 export dump_folder="/mnt/data/wikidata/"
 
+. "${project_folder}/global_vars.sh"
+
 # print help
 if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   echo "Usage:"
@@ -101,10 +103,10 @@ error_code=0
 collecting_start=`timestamp`
 cat "$project_folder"/config/hosts.list | while read host; do
   printf "%s" "Collecting data from $host ... "
-  ssh "$host" bash -s "$dump_name" "$project_folder" "$(cat /etc/hostname)" << 'END'
+  ssh -4 "$host" bash -s "$dump_name" "$project_folder" "$(cat /etc/hostname)" $(cat ${project_folder}/${FILE_MASTER_IPS}) << 'END'
   dump_name="$1"
   project_folder="$2"
-  master_node="$3"
+  master_destinations=("${@:3}")
   if [ ! -d /tmp/"$USER"/ ] || [ ! -x /tmp/"$USER"/ ] || [ ! -d /tmp/"$USER"/"$dump_name" ] || [ ! -x /tmp/"$USER"/"$dump_name" ]; then
     echo "Parsed dump not found on $(cat /etc/hostname)"'!' >&2
     exit 2
@@ -115,14 +117,23 @@ cat "$project_folder"/config/hosts.list | while read host; do
   fi
   cd /tmp/"$USER"/"$dump_name"
   # download all tsv files
-  file_prefix="`ls | awk -F'.' '{ if($3~"part[0-9]{4}" && $4=="tsv") print $1 }' | awk '{ if(!seen[$0]++) print $0 }' | grep -v -e instances`"
+  file_prefix="`ls | awk -F'.' '{ if($3~"part[0-9][0-9][0-9][0-9]" && $4=="tsv") print $1 }' | awk '{ if(!seen[$0]++) print $0 }' | grep -v -e instances`"
   echo "$file_prefix" | while read fp; do
     cat "$fp"* >> "$project_folder"/tmp_extracted_data/"$dump_name"/"`echo "$fp" | awk -F'_' '{ print $1 }'`".tsv
   done
   # download all class dump files
   class_dumps="`ls | awk -F'_' '{ if($1=="classes") print }' | awk -F'.' '{ if($4=="json") print }'`"
   echo "$class_dumps" | while read file_name; do
-    rsync "$file_name" "$master_node":/tmp/"$USER"/classes/"$dump_name"/
+    cmd="rsync \"$file_name\" \"\$master_dst\":/tmp/\"$USER\"/classes/\"$dump_name\"/"
+    for master_dst in "${master_destinations[@]}"
+    do
+      echo "[`date "+%Y-%m-%d %H:%M:%S.%N"`]   RSYNC \"${file_name}\" to master destination \"${master_dst}\".."
+      eval $cmd
+      if test "$?" == 0
+      then
+        break
+      fi
+    done
   done
 END
 if [ $? -eq 0 ]; then

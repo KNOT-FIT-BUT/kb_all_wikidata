@@ -19,6 +19,8 @@ print_help=false
 lang='cs'
 unknown=''  # unknown parameters
 
+. "${project_folder}/global_vars.sh"
+
 # parse params
 while true; do
   case "$1" in
@@ -125,6 +127,10 @@ if [ "$lang" != 'cs' ]; then
   echo "Selected language is $lang"'!' >&2
   echo 'This language might not be supported by all merged KBs!' >&2
 fi
+
+# acquire master ip adresses to avoid rsyncs failed when DNS goes wrong
+ip -4 addr | grep -PA1 "^[0-9]+:\se[nt]" | grep -oP "(?<=inet\s)\d+(\.\d+){3}" > "${project_folder}/${FILE_MASTER_IPS}"
+ip -6 addr | grep -PA1 "^[0-9]+:\se[nt]" | grep -oP "(?<=inet6\s)[0-9a-f]+(\:+[0-9a-f]+)+" >> "${project_folder}/${FILE_MASTER_IPS}"
 
 # start dump extraction
 sh "$dump_parser" "$dump_name" "$lang"
