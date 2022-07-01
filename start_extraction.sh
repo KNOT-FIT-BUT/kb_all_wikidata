@@ -5,9 +5,12 @@
 #              Merges extracted data with data from entity_kb_czech9.
 # project: wikidata2
 # author: Pavel Raur (xraurp00@stud.fit.vutbr.cz)
+# author: Tomáš Volf (ivolf@fit.vut.cz)
 
 project_folder="$(readlink -f $0 | xargs -I{} dirname {})"
 export project_folder
+
+export LC_ALL=en_US.UTF-8
 
 dump_parser="$project_folder"/start_parsing_parallel.sh
 merge_script="$project_folder"/merge_KB/start_merge.sh
@@ -17,9 +20,10 @@ list_dumps=false
 dump_name=''
 print_help=false
 lang='cs'
+tag='default'
 unknown=''  # unknown parameters
 
-. "${project_folder}/global_vars.sh"
+. "${project_folder}/wikidata_lib.sh"
 
 # parse params
 while true; do
@@ -35,7 +39,7 @@ while true; do
     --dump|-d )
       dump_name="$2"
       if [ -z "$2" ]; then
-        echo "Dump name missing"'!' >&2
+        >&2 echo "Dump name missing!"
         exit 1
       fi
       shift 2
@@ -51,7 +55,7 @@ while true; do
     --lang|-g )
       lang="$2"
       if [ -z "$2" ]; then
-        echo "Specify the language"'!'
+        >&2 echo "Specify the language!"
         exit 1
       fi
       shift 2
@@ -62,6 +66,22 @@ while true; do
       ;;
     -g* )
       lang="$(echo "$1" | sed 's/^..\(.*\)/\1/')"
+      shift
+      ;;
+    --tag|-t )
+      lang="$2"
+      if [ -z "$2" ]; then
+        >&2 echo "Tag name missing!"
+        exit 1
+      fi
+      shift 2
+      ;;
+    --tag=* )
+      tag="$(echo "$1" | awk -F'=' '{ print $2 }')"
+      shift
+      ;;
+    -t* )
+      tag="$(echo "$1" | sed 's/^..\(.*\)/\1/')"
       shift
       ;;
     * )
@@ -79,13 +99,15 @@ fi
 if $print_help; then
   echo "Usage:"
   echo "  sh start_extraction.sh"
-  echo "  sh start_extraction.sh --dump dump_name --lang cs"
+  echo "  sh start_extraction.sh [--dump <dump_name>] [--lang ${lang}] [--tag ${tag}]"
   echo "Arguments:"
   echo "  --dump|-d     Name of the dump to process. If not supplied,"
   echo "                newest available dump is used automatically."
-  echo "  --lang|-g     Selects language of the extracted KB. Default"
-  echo "                language is czech (cs)."
+  echo "  --lang|-g     Selects language of the extracted KB (default: \"${lang}\")."
   echo "  --list|-l     Prints list of dump available for processing."
+  echo "  --tag|-t      Tag output directory which allows to distinguish"
+  echo "                outputs in case of multiple processing same dump"
+  echo "                and same language (default: \"${tag}\")."
   echo "  --help|-h     Prints help."
   echo "Description:"
   echo "  Starts extraction of wikidata dump and merges resulting data"
@@ -114,13 +136,13 @@ if [ -z "$dump_name" ]; then
   echo "Selected dump: $dump_name"
 fi
 
-output_path="$project_folder"/tsv_extracted_from_wikidata/"$dump_name"/
-persons_file="$output_path"/"$(echo "$dump_name" | sed 's/-all.json//')"-"$lang"-person.tsv
-group_file="$output_path"/"$(echo "$dump_name" | sed 's/-all.json//')"-"$lang"-group.tsv
-artist_file="$output_path"/"$(echo "$dump_name" | sed 's/-all.json//')"-"$lang"-artist.tsv
-geographical_file="$output_path"/"$(echo "$dump_name" | sed 's/-all.json//')"-"$lang"-geographical.tsv
-event_file="$output_path"/"$(echo "$dump_name" | sed 's/-all.json//')"-"$lang"-event.tsv
-organization_file="$output_path"/"$(echo "$dump_name" | sed 's/-all.json//')"-"$lang"-organization.tsv
+out_dir=`getProjectOutBaseDir "${dump_name}" "${lang}" "${tag}" "${project_folder}"`
+persons_file="$out_dir"/"$(echo "$dump_name" | sed 's/-all.json//')"-"$lang"-person.tsv
+group_file="$out_dir"/"$(echo "$dump_name" | sed 's/-all.json//')"-"$lang"-group.tsv
+artist_file="$out_dir"/"$(echo "$dump_name" | sed 's/-all.json//')"-"$lang"-artist.tsv
+geographical_file="$out_dir"/"$(echo "$dump_name" | sed 's/-all.json//')"-"$lang"-geographical.tsv
+event_file="$out_dir"/"$(echo "$dump_name" | sed 's/-all.json//')"-"$lang"-event.tsv
+organization_file="$out_dir"/"$(echo "$dump_name" | sed 's/-all.json//')"-"$lang"-organization.tsv
 
 # print warning about extraction of other than czech language
 if [ "$lang" != 'cs' ]; then
@@ -133,7 +155,7 @@ ip -4 addr | grep -PA1 "^[0-9]+:\se[nt]" | grep -oP "(?<=inet\s)\d+(\.\d+){3}" >
 ip -6 addr | grep -PA1 "^[0-9]+:\se[nt]" | grep -oP "(?<=inet6\s)[0-9a-f]+(\:+[0-9a-f]+)+" >> "${project_folder}/${FILE_MASTER_IPS}"
 
 # start dump extraction
-sh "$dump_parser" "$dump_name" "$lang"
+sh "$dump_parser" "$dump_name" "$lang" "${tag}"
 parser_error_code=$?
 
 if [ $parser_error_code -ne 0 ]; then

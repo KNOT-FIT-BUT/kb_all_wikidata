@@ -7,13 +7,13 @@
 # Description: Parses wikidata json dump to tsv. Uses classes as entity ids.
 #              Builds relation graph of entities and sorts type according to the most specific class.
 
-import sys  # stderr, exit, ...
 import argparse
+import hashlib  # generate temp file name
 import json  # load data from dump
 import os  # filesystem
-import hashlib  # generate temp file name
-import time  # generate temp file name, timestamps
 import re  # find ids for substitution
+import sys  # stderr, exit, ...
+import time  # generate temp file name, timestamps
 import traceback  # for printing exceptions
 
 # get script name
@@ -26,114 +26,121 @@ def get_args():
     :return: parsed arguments
     """
     argparser = argparse.ArgumentParser(
-        'Parses wikidata json dump to tsv and parses wikidata classes relations.'
+        "Parses wikidata json dump to tsv and parses wikidata classes relations."
     )
     argparser.add_argument(
-        '-f', '--input-file',
-        help='Input file to process.',
+        "-f",
+        "--input-file",
+        help="Input file to process.",
         required=True,
-        type=argparse.FileType('r')
+        type=argparse.FileType("r"),
     )
     argparser.add_argument(
-        '-o', '--output-file',
-        help='TSV output file.',
+        "-o",
+        "--output-file",
+        help="TSV output file.",
         required=True,
-        type=argparse.FileType('w')
+        type=argparse.FileType("w"),
     )
     argparser.add_argument(
-        '-d', '--dict-file',
-        help='Output dictionary file, with entity names.',
-        required=False
+        "-d",
+        "--dict-file",
+        help="Output dictionary file, with entity names.",
+        required=False,
     )
     argparser.add_argument(
-        '-c', '--class-relations-dump',
-        help='Class relations dump file.',
-        required=False
+        "-c",
+        "--class-relations-dump",
+        help="Class relations dump file.",
+        required=False,
     )
     argparser.add_argument(
-        '--show-missing',
-        help='Display ids with missing translation.',
+        "--show-missing",
+        help="Display ids with missing translation.",
         required=False,
         default=False,
-        action='store_true'
+        action="store_true",
     )
     argparser.add_argument(
-        '-b', '--buffer-level',
-        help='Specifies how much memory buffering is used. '
-             'Level 0: No buffering. '
-             'Level 1: Buffer dictionary. '
-             'Level 2: Buffer dictionary and parsed entities.',
+        "-b",
+        "--buffer-level",
+        help="Specifies how much memory buffering is used. "
+        "Level 0: No buffering. "
+        "Level 1: Buffer dictionary. "
+        "Level 2: Buffer dictionary and parsed entities.",
         required=False,
         default=0,
-        type=int
+        type=int,
     )
     argparser.add_argument(
-        '--full-paths',
-        help='Sets type of entities to show full path to entity class instead of just list of all types.',
+        "--full-paths",
+        help="Sets type of entities to show full path to entity class instead of just list of all types.",
         required=False,
         default=False,
-        action='store_true'
+        action="store_true",
     )
     argparser.add_argument(
-        '--keep-root-class',
-        help='If this option is used, root class is not removed from list of ids in type of entity.',
+        "--keep-root-class",
+        help="If this option is used, root class is not removed from list of ids in type of entity.",
         required=False,
         default=False,
-        action='store_true'
+        action="store_true",
     )
     argparser.add_argument(
-        '--root-class-id',
-        help='Defines root class id that will be removed from list of ids in type of entity.'
-             ' Default: Q35120 (entity)',
+        "--root-class-id",
+        help="Defines root class id that will be removed from list of ids in type of entity."
+        " Default: Q35120 (entity)",
         required=False,
-        default='Q35120'
+        default="Q35120",
     )
     argparser.add_argument(
-        '--no-cleanup',
-        help='Disable automatic removal of temporary files.',
+        "--no-cleanup",
+        help="Disable automatic removal of temporary files.",
         required=False,
         default=False,
-        action='store_true'
+        action="store_true",
     )
     # create group for arguments that should not be given together
     # this automatically handles bad argument combinations
     parsing_restrictions_group = argparser.add_mutually_exclusive_group()
     parsing_restrictions_group.add_argument(
-        '-n', '--number-of-entities',
-        help='Parse only given number of entities.',
+        "-n",
+        "--number-of-entities",
+        help="Parse only given number of entities.",
         required=False,
         type=int,
-        default=None
+        default=None,
     )
     parsing_restrictions_group.add_argument(
-        '-l', '--line',
-        help='Parse only line with given number.',
+        "-l",
+        "--line",
+        help="Parse only line with given number.",
         required=False,
         type=int,
-        default=None
+        default=None,
     )
     # mutually exclusive group for parsing sections
     parsing_sections = argparser.add_mutually_exclusive_group()
     parsing_sections.add_argument(
-        '--parse-only',
-        help='Only parse wikidata dump to tsv, without type and name substitution. Can also generate class relations '
-             'dump and dictionary file.',
+        "--parse-only",
+        help="Only parse wikidata dump to tsv, without type and name substitution. Can also generate class relations "
+        "dump and dictionary file.",
         default=False,
-        action='store_true'
+        action="store_true",
     )
     parsing_sections.add_argument(
-        '--substitute-type-only',
-        help='Only substitute type of entities. Input must be already parsed dump without translated names. '
-             'Class relations dump must be specified!',
+        "--substitute-type-only",
+        help="Only substitute type of entities. Input must be already parsed dump without translated names. "
+        "Class relations dump must be specified!",
         default=False,
-        action='store_true'
+        action="store_true",
     )
     parsing_sections.add_argument(
-        '--substitute-names-only',
-        help='Translates wikidata ids for entity names. Input file must be already parsed dump. Dictionary file must '
-             'be specified!',
+        "--substitute-names-only",
+        help="Translates wikidata ids for entity names. Input file must be already parsed dump. Dictionary file must "
+        "be specified!",
         default=False,
-        action='store_true'
+        action="store_true",
     )
     return argparser.parse_args()
 
@@ -150,7 +157,7 @@ class WikidataDumpManipulator:
         :param args: list of input arguments
         :return: string where arguments are separated by |
         """
-        return '|'.join(arg for arg in args if arg)
+        return "|".join(arg for arg in args if arg)
 
     @staticmethod
     def write_entity_to_tsv(entity, file):
@@ -160,8 +167,8 @@ class WikidataDumpManipulator:
         :param file: file where entity will be written to
         """
         for i in range(0, len(entity) - 1):
-            file.write(entity[i] + '\t')  # add tabs between fields
-        file.write(entity[-1] + '\n')  # add eol after last field
+            file.write(entity[i] + "\t")  # add tabs between fields
+        file.write(entity[-1] + "\n")  # add eol after last field
 
 
 class WikidataDumpParser(WikidataDumpManipulator):
@@ -169,7 +176,14 @@ class WikidataDumpParser(WikidataDumpManipulator):
     Parses wikidata dump and builds class relations
     """
 
-    def __init__(self, input_file, output_file=None, dict_file=None, lang='en', class_relations_builder=None):
+    def __init__(
+        self,
+        input_file,
+        output_file=None,
+        dict_file=None,
+        lang="en",
+        class_relations_builder=None,
+    ):
         # files
         self.input_file = input_file
         self.output_file = output_file
@@ -177,7 +191,9 @@ class WikidataDumpParser(WikidataDumpManipulator):
         # data structures
         self.dictionary = {}  # dictionary for name substitution
         self.entities = []  # list of entities used if buffer_entities is true
-        self.class_relations_builder = class_relations_builder  # class relations builder instance
+        self.class_relations_builder = (
+            class_relations_builder  # class relations builder instance
+        )
         # counters
         self.line_number = 1
         self.processed_records = 0
@@ -243,75 +259,93 @@ class WikidataDumpParser(WikidataDumpManipulator):
         10 DBPEDIA URL
         11 IMAGES (MULTIPLE VALUES)
         """
-        entity = ['', '', '', '', '', '', '', '', '', '', '', '']
+        entity = ["", "", "", "", "", "", "", "", "", "", "", ""]
 
         # id
-        if 'id' in record:
-            entity[0] = record['id']
+        if "id" in record:
+            entity[0] = record["id"]
             if not entity[0]:  # sometimes id is empty
                 return None
         else:  # fail if identifier is missing
             return None
 
         # name
-        if 'labels' in record and self.lang in record['labels']:
-            entity[2] = record['labels'][self.lang]['value']
+        if "labels" in record and self.lang in record["labels"]:
+            entity[2] = record["labels"][self.lang]["value"]
 
         # aliases
-        if 'aliases' in record and self.lang in record['aliases']:
-            for value in record['aliases'][self.lang]:
-                entity[4] = self.gen_multival_field(entity[4], value['value'])
+        if "aliases" in record and self.lang in record["aliases"]:
+            for value in record["aliases"][self.lang]:
+                entity[4] = self.gen_multival_field(entity[4], value["value"])
 
         # description
-        if 'descriptions' in record and self.lang in record['descriptions']:
-            entity[5] = record['descriptions'][self.lang]['value']
+        if "descriptions" in record and self.lang in record["descriptions"]:
+            entity[5] = record["descriptions"][self.lang]["value"]
 
         # instance of  and image
-        if 'claims' in record:
-            if 'P31' in record['claims']:  # P31 == instance of
-                for statement in record['claims']['P31']:
+        if "claims" in record:
+            if "P31" in record["claims"]:  # P31 == instance of
+                for statement in record["claims"]["P31"]:
                     try:
-                        if statement['mainsnak']['datavalue']['value']['entity-type'] == 'item':
-                            entity[1] = self.gen_multival_field(entity[1],
-                                                                statement['mainsnak']['datavalue']['value']['id'])
+                        if (
+                            statement["mainsnak"]["datavalue"]["value"]["entity-type"]
+                            == "item"
+                        ):
+                            entity[1] = self.gen_multival_field(
+                                entity[1],
+                                statement["mainsnak"]["datavalue"]["value"]["id"],
+                            )
                     except KeyError:
                         # no such value in the current statement - skip
                         pass
 
-            if 'P18' in record['claims']:  # P18 == image
-                for picture in record['claims']['P18']:
+            if "P18" in record["claims"]:  # P18 == image
+                for picture in record["claims"]["P18"]:
                     try:
                         # commonsMedia = is name of media file (picture)
-                        if picture['mainsnak']['datavalue']['datatype'] == 'commonsMedia':
-                            entity[11] = self.gen_multival_field(entity[11], picture['mainsnak']['datavalue']['value'])
+                        if (
+                            picture["mainsnak"]["datavalue"]["datatype"]
+                            == "commonsMedia"
+                        ):
+                            entity[11] = self.gen_multival_field(
+                                entity[11], picture["mainsnak"]["datavalue"]["value"]
+                            )
                     except KeyError:
                         # can't extract image name - value not present - skip
                         pass
 
             # add relation to relations builder
-            if 'P279' in record['claims']:  # P279 == subclass of
-                for statement in record['claims']['P279']:
+            if "P279" in record["claims"]:  # P279 == subclass of
+                for statement in record["claims"]["P279"]:
                     try:
                         # subclass of
-                        if statement['mainsnak']['datavalue']['value']['entity-type'] == 'item':
+                        if (
+                            statement["mainsnak"]["datavalue"]["value"]["entity-type"]
+                            == "item"
+                        ):
                             if self.class_relations_builder:
                                 self.class_relations_builder.add_ancestor(
-                                    record['id'],  # entity id
-                                    statement['mainsnak']['datavalue']['value']['id'])  # id of related entity
+                                    record["id"],  # entity id
+                                    statement["mainsnak"]["datavalue"]["value"]["id"],
+                                )  # id of related entity
                     except KeyError:
                         # can't extract related class - value is not present - skip
                         pass
 
         # wikipedia url
-        if 'sitelinks' in record and self.lang + 'wiki' in record['sitelinks']:
+        if "sitelinks" in record and self.lang + "wiki" in record["sitelinks"]:
             try:
-                entity[8] = 'http://' + self.lang + '.wikipedia.org/wiki/' + '_'.join(
-                    record['sitelinks'][self.lang + 'wiki']['title'].split())
+                entity[8] = (
+                    "http://"
+                    + self.lang
+                    + ".wikipedia.org/wiki/"
+                    + "_".join(record["sitelinks"][self.lang + "wiki"]["title"].split())
+                )
             except KeyError:  # title not found, record is corrupted
-                entity[8] = ''
+                entity[8] = ""
 
         # wikidata url
-        entity[9] = 'https://www.wikidata.org/wiki/' + entity[0]
+        entity[9] = "https://www.wikidata.org/wiki/" + entity[0]
 
         return entity
 
@@ -328,11 +362,15 @@ class WikidataDumpParser(WikidataDumpManipulator):
                     self.line_number += 1
                     continue
 
-            if len(line) > 2:  # first and last lines will be empty (contains only bracket removed by line = line[:-1])
+            if (
+                len(line) > 2
+            ):  # first and last lines will be empty (contains only bracket removed by line = line[:-1])
                 if line[-2] == ",":
                     line = line[:-2]  # remove comma and newline
                 else:
-                    line = line[:-1]  # last record doesn't have comma, remove only newline
+                    line = line[
+                        :-1
+                    ]  # last record doesn't have comma, remove only newline
                 try:
                     record = json.loads(line)  # convert to dictionary
                 except json.JSONDecodeError:
@@ -351,8 +389,12 @@ class WikidataDumpParser(WikidataDumpManipulator):
                         # written fields: entity[0] == id, entity[2] == name
                         if entity[2]:  # check if name is not empty
                             if self.dict_file:  # add to dictionary file
-                                self.write_entity_to_tsv([entity[0], entity[2]], self.dict_file)
-                            if self.buffer_dictionary:  # add to memory dictionary for name substitution
+                                self.write_entity_to_tsv(
+                                    [entity[0], entity[2]], self.dict_file
+                                )
+                            if (
+                                self.buffer_dictionary
+                            ):  # add to memory dictionary for name substitution
                                 self.dictionary[entity[0]] = entity[2]
 
                         self.processed_records += 1
@@ -375,18 +417,21 @@ class WikidataNameInterchanger(WikidataDumpManipulator):
     Substitutes wikidata ids for names in parsed dump
     """
 
-    def __init__(self,
-                 output_file,
-                 input_file=None,
-                 dict_file=None,
-                 dictionary=None,
-                 dump=None,
-                 show_missing=False,
-                 exclude=(0, 8, 9, 10, 11),
-                 remove_missing=False
-                 ):
+    def __init__(
+        self,
+        output_file,
+        input_file=None,
+        dict_file=None,
+        dictionary=None,
+        dump=None,
+        show_missing=False,
+        exclude=(0, 8, 9, 10, 11),
+        remove_missing=False,
+    ):
         # files
-        self.output_file = output_file  # output file where translated data will be written to
+        self.output_file = (
+            output_file  # output file where translated data will be written to
+        )
         self.input_file = input_file  # input file with entities for translation
         self.dict_file = dict_file  # file with dictionary used for translation
 
@@ -438,27 +483,32 @@ class WikidataNameInterchanger(WikidataDumpManipulator):
         for line in input_data:
             if type(line) == str:  # if input is tsv file line, split it to list by tabs
                 line = line[:-1]  # remove newline from end of the line
-                line = line.split('\t')
+                line = line.split("\t")
             for i in range(len(line)):
-                if i in self.excluded:  # skip entity id, urls, file names, etc. (indexes defined in self.excluded)
+                if (
+                    i in self.excluded
+                ):  # skip entity id, urls, file names, etc. (indexes defined in self.excluded)
                     continue
-                values = line[i].split('|')  # split multiple value fields
+                values = line[i].split("|")  # split multiple value fields
                 results = []  # id translations
                 for value in values:
                     # values that are not wikidata ids are directly added to the results
-                    if not re.fullmatch('^Q\d+$', value):
+                    if not re.fullmatch("^Q\d+$", value):
                         results.append(value)
                         continue
 
                     try:  # translate id
                         results.append(self.dictionary[value])
                     except KeyError:  # entity name is not in dictionary
-                        if self.show_missing and value not in self.ids_without_translation:
+                        if (
+                            self.show_missing
+                            and value not in self.ids_without_translation
+                        ):
                             self.ids_without_translation.append(value)
                         # add id to result if ids with missing translation should not be removed
                         if not self.remove_missing:
                             results.append(value)
-                line[i] = '|'.join(results)  # join results back to line field
+                line[i] = "|".join(results)  # join results back to line field
             self.write_entity_to_tsv(line, self.output_file)
 
         return 0
@@ -476,7 +526,7 @@ class WikidataNameInterchanger(WikidataDumpManipulator):
             self.dictionary = {}
             for line in self.dict_file:
                 line = line[:-1]  # remove newline
-                line = line.split('\t')
+                line = line.split("\t")
                 self.dictionary[line[0]] = line[1]
             return 0
 
@@ -504,8 +554,8 @@ class ClassRelationsBuilder(WikidataDumpManipulator):
         """
         if class_id not in self.classes:
             self.classes[class_id] = {}
-            self.classes[class_id]['successors'] = []
-            self.classes[class_id]['ancestors'] = []
+            self.classes[class_id]["successors"] = []
+            self.classes[class_id]["ancestors"] = []
 
     def add_ancestor(self, class_id, ancestor_id):
         """
@@ -516,7 +566,7 @@ class ClassRelationsBuilder(WikidataDumpManipulator):
         if class_id not in self.classes:  # create new class item in dictionary
             self.add_class(class_id)
         # add ancestor class to list of ancestors
-        self.classes[class_id]['ancestors'].append(ancestor_id)
+        self.classes[class_id]["ancestors"].append(ancestor_id)
 
     def add_successor(self, class_id, successor_id):
         """
@@ -527,7 +577,7 @@ class ClassRelationsBuilder(WikidataDumpManipulator):
         if class_id not in self.classes:  # create new class item in dictionary
             self.add_class(class_id)
         # add successor class to list of successors
-        self.classes[class_id]['successors'].append(successor_id)
+        self.classes[class_id]["successors"].append(successor_id)
 
     def clear_successors(self, class_id):
         """
@@ -535,7 +585,7 @@ class ClassRelationsBuilder(WikidataDumpManipulator):
         :class_id: id of class where successors will be removed
         """
         if class_id in self.classes:
-            self.classes[class_id]['successors'] = []
+            self.classes[class_id]["successors"] = []
 
     def clear_ancestors(self, class_id):
         """
@@ -543,7 +593,7 @@ class ClassRelationsBuilder(WikidataDumpManipulator):
         :class_id: id of class where ancestors will be removed
         """
         if class_id in self.classes:
-            self.classes[class_id]['ancestors'] = []
+            self.classes[class_id]["ancestors"] = []
 
     def remove_class(self, class_id):
         """
@@ -580,7 +630,10 @@ class ClassRelationsBuilder(WikidataDumpManipulator):
         """
 
         # class data are not parsed / class is root class or have no ancestors
-        if current_class not in self.classes or len(self.classes[current_class]['ancestors']) <= 0:
+        if (
+            current_class not in self.classes
+            or len(self.classes[current_class]["ancestors"]) <= 0
+        ):
             return [current_class]
         # class is its successor with cyclic dependency to itself
         if current_class in closed_nodes:
@@ -589,10 +642,14 @@ class ClassRelationsBuilder(WikidataDumpManipulator):
         closed_nodes.append(current_class)  # append current class to closed
 
         all_paths = []  # all paths to this class
-        for ancestor in self.classes[current_class]['ancestors']:
-            paths_to_ancestor = self.get_path_to_class(ancestor, closed_nodes)  # get all paths to ancestor
-            for path in paths_to_ancestor:  # append path to paths and add current class to end
-                all_paths.append(path + '->' + current_class)
+        for ancestor in self.classes[current_class]["ancestors"]:
+            paths_to_ancestor = self.get_path_to_class(
+                ancestor, closed_nodes
+            )  # get all paths to ancestor
+            for (
+                path
+            ) in paths_to_ancestor:  # append path to paths and add current class to end
+                all_paths.append(path + "->" + current_class)
 
         closed_nodes.pop()  # pop current class from the list before return
 
@@ -636,10 +693,15 @@ class ClassRelationsBuilder(WikidataDumpManipulator):
         :return: list of all parents of current class and their depth
         """
 
-        classes = [[current_class, depth]]  # classes to return (with current class added)
+        classes = [
+            [current_class, depth]
+        ]  # classes to return (with current class added)
 
         # class data are not parsed / class is root class or have no ancestors
-        if current_class not in self.classes or len(self.classes[current_class]['ancestors']) <= 0:
+        if (
+            current_class not in self.classes
+            or len(self.classes[current_class]["ancestors"]) <= 0
+        ):
             return classes
         # class is its successor with cyclic dependency to itself
         if current_class in closed_nodes:
@@ -647,7 +709,7 @@ class ClassRelationsBuilder(WikidataDumpManipulator):
 
         closed_nodes.append(current_class)  # append current class to closed
 
-        for ancestor in self.classes[current_class]['ancestors']:  # add all parents
+        for ancestor in self.classes[current_class]["ancestors"]:  # add all parents
             classes.extend(self.get_parent_classes(ancestor, depth + 1, closed_nodes))
 
         closed_nodes.pop()  # pop current class from the list before return
@@ -708,7 +770,9 @@ class ClassRelationsBuilder(WikidataDumpManipulator):
         # remove depth numbers before return
         return [t[0] for t in new_types]
 
-    def replace_types_of_entities(self, entities, full_path=False, remove_root_class=False, root_class=None):
+    def replace_types_of_entities(
+        self, entities, full_path=False, remove_root_class=False, root_class=None
+    ):
         """
         Replaces type of each entity on given field number by complete path to entity class.
         :param entities: entities in array or file descriptor to file with entities
@@ -719,22 +783,26 @@ class ClassRelationsBuilder(WikidataDumpManipulator):
         """
         file = False
         for entity in entities:
-            if type(entity) == str:  # if input is tsv file line, split it to list by tabs
+            if (
+                type(entity) == str
+            ):  # if input is tsv file line, split it to list by tabs
                 entity = entity[:-1]  # remove newline from end of the line
-                entity = entity.split('\t')
+                entity = entity.split("\t")
                 file = True
-            types = entity[1].split('|')  # 1 == type of entity (see parser documentation)
+            types = entity[1].split(
+                "|"
+            )  # 1 == type of entity (see parser documentation)
             if full_path:
                 types = self.get_full_paths(types)
             else:
                 types = self.get_all_parents(types, remove_root_class, root_class)
-            types = '|'.join(types)
+            types = "|".join(types)
             entity[1] = types
             if file:
                 self.write_entity_to_tsv(entity, self.output_file)
 
 
-def gen_temp_file(file_path, mode, tag=''):
+def gen_temp_file(file_path, mode, tag=""):
     """
     Generates temporary file in folder given by path
     :param file_path: path to the file that will be appended before the name
@@ -747,10 +815,16 @@ def gen_temp_file(file_path, mode, tag=''):
         return None
 
     # generate unique file name
-    file_name = hashlib.sha1(str(time.time()).encode()).hexdigest() + '_' + str(tag) + ".temp"
+    file_name = (
+        hashlib.sha1(str(time.time()).encode()).hexdigest() + "_" + str(tag) + ".temp"
+    )
     while os.path.exists(os.path.join(file_path, file_name)):
-        file_name = hashlib.sha1(str(time.time()).encode() + file_name.encode()).hexdigest() \
-                    + '_' + str(tag) + ".temp"
+        file_name = (
+            hashlib.sha1(str(time.time()).encode() + file_name.encode()).hexdigest()
+            + "_"
+            + str(tag)
+            + ".temp"
+        )
 
     # return file handle
     return open(os.path.join(file_path, file_name), mode)
@@ -768,19 +842,27 @@ def parse_only(args):
     dict_file = None
     if args.class_relations_dump:
         try:
-            class_relations_dump = open(args.class_relations_dump, 'w')
+            class_relations_dump = open(args.class_relations_dump, "w")
         except Exception:
-            sys.stderr.write(SCRIPT_NAME + ": Failed to open class relations dump! Handled error: "
-                             + str(traceback.format_exc()) + "\n")
+            sys.stderr.write(
+                SCRIPT_NAME
+                + ": Failed to open class relations dump! Handled error: "
+                + str(traceback.format_exc())
+                + "\n"
+            )
             args.output_file.close()
             args.input_file.close()
             return 1
     if args.dict_file:
         try:
-            dict_file = open(args.dict_file, 'w+')
+            dict_file = open(args.dict_file, "w+")
         except Exception:
-            sys.stderr.write(SCRIPT_NAME + ": Failed to open dict file! Handled error: "
-                             + str(traceback.format_exc()) + "\n")
+            sys.stderr.write(
+                SCRIPT_NAME
+                + ": Failed to open dict file! Handled error: "
+                + str(traceback.format_exc())
+                + "\n"
+            )
             args.output_file.close()
             args.input_file.close()
             if args.class_relations_dump:
@@ -788,10 +870,12 @@ def parse_only(args):
             return 1
 
     relations_builder = ClassRelationsBuilder(dump_file=class_relations_dump)
-    parser = WikidataDumpParser(input_file=args.input_file,
-                                output_file=args.output_file,
-                                dict_file=dict_file,
-                                class_relations_builder=relations_builder)
+    parser = WikidataDumpParser(
+        input_file=args.input_file,
+        output_file=args.output_file,
+        dict_file=dict_file,
+        class_relations_builder=relations_builder,
+    )
     return_code = 0
     try:
         start_time = time.time()
@@ -803,10 +887,17 @@ def parse_only(args):
         print("Corrupted entities: " + str(parser.corrupted_records))
         print("Start: " + time.ctime(start_time))
         print("End: " + time.ctime(end_time))
-        print("Total execution time: " + time.strftime("%H:%M:%S", time.gmtime(end_time - start_time)))
+        print(
+            "Total execution time: "
+            + time.strftime("%H:%M:%S", time.gmtime(end_time - start_time))
+        )
     except Exception:
-        sys.stderr.write(SCRIPT_NAME + ": Failed to parse wikidata dump! Handled error:\n"
-                         + str(traceback.format_exc()) + "\n")
+        sys.stderr.write(
+            SCRIPT_NAME
+            + ": Failed to parse wikidata dump! Handled error:\n"
+            + str(traceback.format_exc())
+            + "\n"
+        )
         return_code = 1
     finally:
         args.output_file.close()
@@ -830,18 +921,24 @@ def substitute_names_only(args):
         return 2
     else:
         try:
-            dict_file = open(args.dict_file, 'r')
+            dict_file = open(args.dict_file, "r")
         except Exception:
-            sys.stderr.write(SCRIPT_NAME + ": Failed to open dictionary file! Handled error:\n"
-                             + str(traceback.format_exc()) + "\n")
+            sys.stderr.write(
+                SCRIPT_NAME
+                + ": Failed to open dictionary file! Handled error:\n"
+                + str(traceback.format_exc())
+                + "\n"
+            )
             args.output_file.close()
             args.input_file.close()
             return 1
 
-    name_changer = WikidataNameInterchanger(input_file=args.input_file,
-                                            dict_file=dict_file,
-                                            output_file=args.output_file,
-                                            show_missing=args.show_missing)
+    name_changer = WikidataNameInterchanger(
+        input_file=args.input_file,
+        dict_file=dict_file,
+        output_file=args.output_file,
+        show_missing=args.show_missing,
+    )
     return_code = 0
     try:
         start_time = time.time()
@@ -849,16 +946,26 @@ def substitute_names_only(args):
         end_time = time.time()
 
         if args.show_missing:
-            print("Number of entities without name: " + str(len(name_changer.ids_without_translation)))
+            print(
+                "Number of entities without name: "
+                + str(len(name_changer.ids_without_translation))
+            )
             for entity_id in name_changer.ids_without_translation:
                 sys.stdout.write(str(entity_id) + " ")
             sys.stdout.write("\n")
         print("Start: " + time.ctime(start_time))
         print("End: " + time.ctime(end_time))
-        print("Total execution time: " + time.strftime("%H:%M:%S", time.gmtime(end_time - start_time)))
+        print(
+            "Total execution time: "
+            + time.strftime("%H:%M:%S", time.gmtime(end_time - start_time))
+        )
     except Exception:
-        sys.stderr.write(SCRIPT_NAME + ": Failed to substitute ids for names! Handled error:\n"
-                         + str(traceback.format_exc()) + "\n")
+        sys.stderr.write(
+            SCRIPT_NAME
+            + ": Failed to substitute ids for names! Handled error:\n"
+            + str(traceback.format_exc())
+            + "\n"
+        )
         return_code = 1
     finally:
         args.output_file.close()
@@ -879,10 +986,14 @@ def substitute_type_only(args):
         return 2
     else:
         try:
-            class_relations_dump = open(args.class_relations_dump, 'r')
+            class_relations_dump = open(args.class_relations_dump, "r")
         except Exception:
-            sys.stderr.write(SCRIPT_NAME + ": Failed to open dictionary file! Handled error:\n"
-                             + str(traceback.format_exc()) + "\n")
+            sys.stderr.write(
+                SCRIPT_NAME
+                + ": Failed to open dictionary file! Handled error:\n"
+                + str(traceback.format_exc())
+                + "\n"
+            )
             args.output_file.close()
             args.input_file.close()
             return 1
@@ -893,18 +1004,27 @@ def substitute_type_only(args):
     try:
         relations_builder.load_dump(class_relations_dump)
         start_time = time.time()
-        relations_builder.replace_types_of_entities(entities=args.input_file,
-                                                    full_path=args.full_paths,
-                                                    remove_root_class=not args.keep_root_class,
-                                                    root_class=args.root_class_id)
+        relations_builder.replace_types_of_entities(
+            entities=args.input_file,
+            full_path=args.full_paths,
+            remove_root_class=not args.keep_root_class,
+            root_class=args.root_class_id,
+        )
         end_time = time.time()
 
         print("Start: " + time.ctime(start_time))
         print("End: " + time.ctime(end_time))
-        print("Total execution time: " + time.strftime("%H:%M:%S", time.gmtime(end_time - start_time)))
+        print(
+            "Total execution time: "
+            + time.strftime("%H:%M:%S", time.gmtime(end_time - start_time))
+        )
     except Exception:
-        sys.stderr.write(SCRIPT_NAME + ": Failed to substitute types of entities! Handled error:\n"
-                         + str(traceback.format_exc()) + "\n")
+        sys.stderr.write(
+            SCRIPT_NAME
+            + ": Failed to substitute types of entities! Handled error:\n"
+            + str(traceback.format_exc())
+            + "\n"
+        )
         return_code = 1
     finally:
         args.input_file.close()
@@ -927,19 +1047,27 @@ def complete_parsing(args):
     dict_file = None
     if args.class_relations_dump:
         try:
-            class_relations_dump = open(args.class_relations_dump, 'w')
+            class_relations_dump = open(args.class_relations_dump, "w")
         except Exception:
-            sys.stderr.write(SCRIPT_NAME + ": Failed to open class relations dump! Handled error:\n"
-                             + str(traceback.format_exc()) + "\n")
+            sys.stderr.write(
+                SCRIPT_NAME
+                + ": Failed to open class relations dump! Handled error:\n"
+                + str(traceback.format_exc())
+                + "\n"
+            )
             args.output_file.close()
             args.input_file.close()
             return 1
     if args.dict_file:
         try:
-            dict_file = open(args.dict_file, 'w+')
+            dict_file = open(args.dict_file, "w+")
         except Exception:
-            sys.stderr.write(SCRIPT_NAME + ": Failed to open dict file! Handled error:\n"
-                             + str(traceback.format_exc()) + "\n")
+            sys.stderr.write(
+                SCRIPT_NAME
+                + ": Failed to open dict file! Handled error:\n"
+                + str(traceback.format_exc())
+                + "\n"
+            )
             args.output_file.close()
             args.input_file.close()
             if args.class_relations_dump:
@@ -957,21 +1085,26 @@ def complete_parsing(args):
         relations_builder.dump_file = class_relations_dump
 
     # dump parser
-    parser = WikidataDumpParser(input_file=args.input_file,
-                                class_relations_builder=relations_builder)
+    parser = WikidataDumpParser(
+        input_file=args.input_file, class_relations_builder=relations_builder
+    )
     # buffering
     if args.buffer_level > 0:
         parser.buffer_dictionary = True
     if args.buffer_level > 1:
         parser.buffer_entities = True
     else:  # file with dump
-        parser.output_file = gen_temp_file(os.path.dirname(args.output_file.name), 'w+', 'output_file')
+        parser.output_file = gen_temp_file(
+            os.path.dirname(args.output_file.name), "w+", "output_file"
+        )
         temp_files.append(parser.output_file)
     # dictionary file
     if args.dict_file:
         parser.dict_file = dict_file
     elif args.buffer_level < 1:  # Dictionary buffering disabled
-        parser.dict_file = gen_temp_file(os.path.dirname(args.output_file.name), 'w+', 'dict')
+        parser.dict_file = gen_temp_file(
+            os.path.dirname(args.output_file.name), "w+", "dict"
+        )
         temp_files.append(parser.dict_file)
     # number of parsed entities
     if args.number_of_entities:
@@ -983,8 +1116,12 @@ def complete_parsing(args):
     try:
         parser.parse_wikidump()
     except Exception:
-        sys.stderr.write(SCRIPT_NAME + ": Failed to parse wikidata dump! Handled error:\n"
-                         + str(traceback.format_exc()) + "\n")
+        sys.stderr.write(
+            SCRIPT_NAME
+            + ": Failed to parse wikidata dump! Handled error:\n"
+            + str(traceback.format_exc())
+            + "\n"
+        )
 
         # close output files
         args.output_file.close()
@@ -1011,18 +1148,27 @@ def complete_parsing(args):
         file.seek(0)
     # set temp file for class relations output
     if args.buffer_level < 2:
-        relations_builder.output_file = gen_temp_file(os.path.dirname(args.output_file.name),
-                                                      'w+', 'class_relations_output')
+        relations_builder.output_file = gen_temp_file(
+            os.path.dirname(args.output_file.name), "w+", "class_relations_output"
+        )
         temp_files.append(relations_builder.output_file)
 
     # substitution of class types
     timestamp_types_substitution_start = time.time()
     try:
-        relations_builder.replace_types_of_entities(parser.entities if args.buffer_level > 1 else parser.output_file,
-                                                    args.full_paths, not args.keep_root_class, args.root_class_id)
+        relations_builder.replace_types_of_entities(
+            parser.entities if args.buffer_level > 1 else parser.output_file,
+            args.full_paths,
+            not args.keep_root_class,
+            args.root_class_id,
+        )
     except Exception:
-        sys.stderr.write(SCRIPT_NAME + ": Failed to substitute types of entities! Handled error:\n"
-                         + str(traceback.format_exc()) + "\n")
+        sys.stderr.write(
+            SCRIPT_NAME
+            + ": Failed to substitute types of entities! Handled error:\n"
+            + str(traceback.format_exc())
+            + "\n"
+        )
 
         # close output files
         args.output_file.close()
@@ -1047,7 +1193,9 @@ def complete_parsing(args):
     name_changer = WikidataNameInterchanger(args.output_file, dump=parser.entities)
     # if dump is in tempfile not in memory, set input file descriptor
     if args.buffer_level < 2:
-        name_changer.input_file = relations_builder.output_file if relations_builder.output_file else None
+        name_changer.input_file = (
+            relations_builder.output_file if relations_builder.output_file else None
+        )
     # dictionary
     if args.buffer_level < 1:  # in file
         name_changer.dict_file = parser.dict_file
@@ -1069,8 +1217,12 @@ def complete_parsing(args):
     try:
         name_changer.substitute_names()
     except ValueError:
-        sys.stderr.write(SCRIPT_NAME + ": Failed to substitute ids for names! Handled error:\n"
-                         + str(traceback.format_exc()) + "\n")
+        sys.stderr.write(
+            SCRIPT_NAME
+            + ": Failed to substitute ids for names! Handled error:\n"
+            + str(traceback.format_exc())
+            + "\n"
+        )
 
         # close output files
         args.output_file.close()
@@ -1109,7 +1261,10 @@ def complete_parsing(args):
     print("Processed entities: " + str(parser.processed_records))
     print("Corrupted entities: " + str(parser.corrupted_records))
     if args.show_missing:
-        print("Number of entities without name: " + str(len(name_changer.ids_without_translation)))
+        print(
+            "Number of entities without name: "
+            + str(len(name_changer.ids_without_translation))
+        )
         for entity_id in name_changer.ids_without_translation:
             sys.stdout.write(str(entity_id) + " ")
         sys.stdout.write("\n")
@@ -1117,16 +1272,44 @@ def complete_parsing(args):
     print("Start: " + time.ctime(timestamp_parsing_start))
     print("End: " + time.ctime(timestamp_names_substituted))
     # execution length
-    print("Total execution time: " + time.strftime("%H:%M:%S", time.gmtime(
-        timestamp_parsed - timestamp_parsing_start
-        + timestamp_names_substituted - timestamp_names_substitution_start
-        + timestamp_types_substituted - timestamp_types_substitution_start)))
-    print("Parsing time: " + time.strftime("%H:%M:%S", time.gmtime(
-        timestamp_parsed - timestamp_parsing_start)))
-    print("Type substitution time: " + time.strftime("%H:%M:%S", time.gmtime(
-        timestamp_types_substituted - timestamp_types_substitution_start)))
-    print("Name substitution time: " + time.strftime("%H:%M:%S", time.gmtime(
-        timestamp_names_substituted - timestamp_names_substitution_start)))
+    print(
+        "Total execution time: "
+        + time.strftime(
+            "%H:%M:%S",
+            time.gmtime(
+                timestamp_parsed
+                - timestamp_parsing_start
+                + timestamp_names_substituted
+                - timestamp_names_substitution_start
+                + timestamp_types_substituted
+                - timestamp_types_substitution_start
+            ),
+        )
+    )
+    print(
+        "Parsing time: "
+        + time.strftime(
+            "%H:%M:%S", time.gmtime(timestamp_parsed - timestamp_parsing_start)
+        )
+    )
+    print(
+        "Type substitution time: "
+        + time.strftime(
+            "%H:%M:%S",
+            time.gmtime(
+                timestamp_types_substituted - timestamp_types_substitution_start
+            ),
+        )
+    )
+    print(
+        "Name substitution time: "
+        + time.strftime(
+            "%H:%M:%S",
+            time.gmtime(
+                timestamp_names_substituted - timestamp_names_substitution_start
+            ),
+        )
+    )
     if args.no_cleanup:
         print("Not removed temporary files:")
         for file in temp_files:

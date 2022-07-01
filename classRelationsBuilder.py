@@ -4,11 +4,12 @@
 # Project: wikidata2
 # Description: Creates wikidata class relations and generates transitive closure and new type definitions.
 
-import parseJson2  # for WikidataClassManipulator
+import argparse
 import json
 import os  # filesystem
 import sys  # stdin, stderr
-import argparse
+
+import parseJson2  # for WikidataClassManipulator
 
 # get script name
 SCRIPT_NAME = os.path.basename(sys.argv[0])
@@ -16,79 +17,89 @@ SCRIPT_NAME = os.path.basename(sys.argv[0])
 
 def get_args():
     argparser = argparse.ArgumentParser(
-        'Generates description of class relations and instance to class relations'
-        ' and calculates transitive closures of those relations.'
+        "Generates description of class relations and instance to class relations"
+        " and calculates transitive closures of those relations."
     )
     argparser.add_argument(
-        '-s', '--save-dump',
-        help='Save class relations dump and instance relations dump to file after finish.',
+        "-s",
+        "--save-dump",
+        help="Save class relations dump and instance relations dump to file after finish.",
         default=False,
-        action='store_true'
+        action="store_true",
     )
     argparser.add_argument(
-        '-r', '--complete-relations',
-        help='Check and add all missing class relations.',
+        "-r",
+        "--complete-relations",
+        help="Check and add all missing class relations.",
         default=False,
-        action='store_true'
+        action="store_true",
     )
     argparser.add_argument(
-        '--tsv',
-        help='File where to save relations in tsv format as subclass-superclass relations.'
+        "--tsv",
+        help="File where to save relations in tsv format as subclass-superclass relations.",
     )
     argparser.add_argument(
-        '-t', '--superclass-tc',
-        help='File where transitive closure of superclasses will be saved.'
+        "-t",
+        "--superclass-tc",
+        help="File where transitive closure of superclasses will be saved.",
     )
     argparser.add_argument(
-        '-a', '--subclasses',
-        help='File where list of subclasses will be saved.'
+        "-a", "--subclasses", help="File where list of subclasses will be saved."
     )
     argparser.add_argument(
-        '-c', '--class-relations-dump',
-        help='Class relations dump file.'
+        "-c", "--class-relations-dump", help="Class relations dump file."
     )
     argparser.add_argument(
-        '-d', '--dump-directory',
-        help='Directory with distributed class relations dump.'
+        "-d",
+        "--dump-directory",
+        help="Directory with distributed class relations dump.",
     )
     argparser.add_argument(
-        '-i', '--instance-relations-dump',
-        help='File with relations of classes and instances.'
+        "-i",
+        "--instance-relations-dump",
+        help="File with relations of classes and instances.",
     )
     argparser.add_argument(
-        '-f', '--instances-directory',
-        help='Directory with distributed instance relations dump.'
+        "-f",
+        "--instances-directory",
+        help="Directory with distributed instance relations dump.",
     )
     argparser.add_argument(
-        '-e', '--expanded-instances',
-        help='File where expanded instances will be stored.'
+        "-e",
+        "--expanded-instances",
+        help="File where expanded instances will be stored.",
     )
     argparser.add_argument(
-        '-v', '--verbose',
-        help='Print additional information about what is being done.',
+        "-v",
+        "--verbose",
+        help="Print additional information about what is being done.",
         default=False,
-        action='store_true'
+        action="store_true",
     )
     argparser.add_argument(
-        '-p', '--full-path',
-        help='Generate full path to each class in tc, instead of just class name.',
+        "-p",
+        "--full-path",
+        help="Generate full path to each class in tc, instead of just class name.",
         default=False,
-        action='store_true'
+        action="store_true",
     )
     argparser.add_argument(
-        '-l', '--replace-types',
-        help='File with entities where to replace type. Output file for entities must be set!'
-             ' See \'--entities-output-file\' and \'--field-index\' options.'
+        "-l",
+        "--replace-types",
+        help="File with entities where to replace type. Output file for entities must be set!"
+        " See '--entities-output-file' and '--field-index' options.",
     )
     argparser.add_argument(
-        '-o', '--entities-output-file',
-        help='File where entities with replaced type will be stored.'
+        "-o",
+        "--entities-output-file",
+        help="File where entities with replaced type will be stored.",
     )
     argparser.add_argument(
-        '-x', '--field-index',
-        help='Index of type field in entity. (default=1)',
+        "-x",
+        "--field-index",
+        help="Index of type field in entity. (default=1)",
         type=int,
-        default=1
+        default=1,
     )
     return argparser.parse_args()
 
@@ -105,7 +116,9 @@ class ClassRelationsBuilder(parseJson2.WikidataDumpManipulator):
         :param instances: dictionary with existing instance - class relations
         """
         self.classes = classes if classes else {}  # dictionary with class relations
-        self.instances = instances if instances else {}  # dictionary with instance - class relations
+        self.instances = (
+            instances if instances else {}
+        )  # dictionary with instance - class relations
 
     def add_class(self, class_id):
         """
@@ -114,8 +127,8 @@ class ClassRelationsBuilder(parseJson2.WikidataDumpManipulator):
         """
         if class_id not in self.classes:
             self.classes[class_id] = {}
-            self.classes[class_id]['successors'] = []
-            self.classes[class_id]['ancestors'] = []
+            self.classes[class_id]["successors"] = []
+            self.classes[class_id]["ancestors"] = []
 
     def add_ancestor(self, class_id, ancestor_id):
         """
@@ -126,8 +139,8 @@ class ClassRelationsBuilder(parseJson2.WikidataDumpManipulator):
         if class_id not in self.classes:  # create new class item in dictionary
             self.add_class(class_id)
         # add ancestor class to list of ancestors
-        if ancestor_id not in self.classes[class_id]['ancestors']:
-            self.classes[class_id]['ancestors'].append(ancestor_id)
+        if ancestor_id not in self.classes[class_id]["ancestors"]:
+            self.classes[class_id]["ancestors"].append(ancestor_id)
 
     def add_successor(self, class_id, successor_id):
         """
@@ -138,8 +151,8 @@ class ClassRelationsBuilder(parseJson2.WikidataDumpManipulator):
         if class_id not in self.classes:  # create new class item in dictionary
             self.add_class(class_id)
         # add successor class to list of successors
-        if successor_id not in self.classes[class_id]['successors']:
-            self.classes[class_id]['successors'].append(successor_id)
+        if successor_id not in self.classes[class_id]["successors"]:
+            self.classes[class_id]["successors"].append(successor_id)
 
     def clear_successors(self, class_id):
         """
@@ -147,7 +160,7 @@ class ClassRelationsBuilder(parseJson2.WikidataDumpManipulator):
         :class_id: id of class where successors will be removed
         """
         if class_id in self.classes:
-            self.classes[class_id]['successors'] = []
+            self.classes[class_id]["successors"] = []
 
     def clear_ancestors(self, class_id):
         """
@@ -155,7 +168,7 @@ class ClassRelationsBuilder(parseJson2.WikidataDumpManipulator):
         :class_id: id of class where ancestors will be removed
         """
         if class_id in self.classes:
-            self.classes[class_id]['ancestors'] = []
+            self.classes[class_id]["ancestors"] = []
 
     def remove_class(self, class_id):
         """
@@ -171,7 +184,7 @@ class ClassRelationsBuilder(parseJson2.WikidataDumpManipulator):
         :param instance_id: id of instance entity
         :param class_ids: ids of classes of entity (multiple value field, or single class id)
         """
-        ids = class_ids.split('|')
+        ids = class_ids.split("|")
         for class_id in ids:
             if class_id not in self.instances:
                 self.instances[class_id] = []
@@ -243,9 +256,9 @@ class ClassRelationsBuilder(parseJson2.WikidataDumpManipulator):
         """
         for key in classes.keys():
             if key in self.classes:
-                for class_id in classes[key]['ancestors']:
+                for class_id in classes[key]["ancestors"]:
                     self.add_ancestor(key, class_id)
-                for class_id in classes[key]['successors']:
+                for class_id in classes[key]["successors"]:
                     self.add_successor(key, class_id)
             else:
                 self.classes[key] = classes[key]
@@ -261,7 +274,7 @@ class ClassRelationsBuilder(parseJson2.WikidataDumpManipulator):
         folder = os.scandir(dump_folder)
         for file in folder:
             if file.is_file():
-                tmp_file = open(file.path, 'r')
+                tmp_file = open(file.path, "r")
                 dump_part = json.load(tmp_file)
                 tmp_file.close()
                 if instances:
@@ -278,7 +291,10 @@ class ClassRelationsBuilder(parseJson2.WikidataDumpManipulator):
         """
 
         # class data are not parsed / class is root class or have no ancestors
-        if current_class not in self.classes or len(self.classes[current_class]['ancestors']) <= 0:
+        if (
+            current_class not in self.classes
+            or len(self.classes[current_class]["ancestors"]) <= 0
+        ):
             return [current_class]
         # class is its successor with cyclic dependency to itself
         if current_class in closed_nodes:
@@ -287,10 +303,14 @@ class ClassRelationsBuilder(parseJson2.WikidataDumpManipulator):
         closed_nodes.append(current_class)  # append current class to closed
 
         all_paths = []  # all paths to this class
-        for ancestor in self.classes[current_class]['ancestors']:
-            paths_to_ancestor = self.get_path_to_class(ancestor, closed_nodes)  # get all paths to ancestor
-            for path in paths_to_ancestor:  # append path to paths and add current class to end
-                all_paths.append(path + '->' + current_class)
+        for ancestor in self.classes[current_class]["ancestors"]:
+            paths_to_ancestor = self.get_path_to_class(
+                ancestor, closed_nodes
+            )  # get all paths to ancestor
+            for (
+                path
+            ) in paths_to_ancestor:  # append path to paths and add current class to end
+                all_paths.append(path + "->" + current_class)
 
         closed_nodes.pop()  # pop current class from the list before return
 
@@ -317,7 +337,7 @@ class ClassRelationsBuilder(parseJson2.WikidataDumpManipulator):
         if len(paths) > 1:
             i = 1
             while i < len(paths):
-                if paths[i] == paths[i-1]:
+                if paths[i] == paths[i - 1]:
                     paths.pop(i)
                 else:
                     i += 1
@@ -343,7 +363,9 @@ class ClassRelationsBuilder(parseJson2.WikidataDumpManipulator):
                     all_tcs.append(cid)
         return all_tcs
 
-    def replace_types_of_entities(self, entities, output_file=None, fi=1, full_path=False):
+    def replace_types_of_entities(
+        self, entities, output_file=None, fi=1, full_path=False
+    ):
         """
         Replaces type of each entity on given field index by complete path to entity class.
         :param entities: entities in array or file descriptor to file with entities
@@ -354,18 +376,22 @@ class ClassRelationsBuilder(parseJson2.WikidataDumpManipulator):
                           or just list of all types and supertypes
         """
         if output_file is None and type(entities) != list:
-            raise RuntimeError("If entities are read from file instead of list, output file must be set!")
+            raise RuntimeError(
+                "If entities are read from file instead of list, output file must be set!"
+            )
         for entity in entities:
-            if type(entity) == str:  # if input is tsv file line, split it to list by tabs
+            if (
+                type(entity) == str
+            ):  # if input is tsv file line, split it to list by tabs
                 entity = entity[:-1]  # remove newline from end of the line
-                entity = entity.split('\t')
+                entity = entity.split("\t")
             if entity[fi]:  # process only if type field isn't empty
-                types = entity[fi].split('|')  # fi == field with type of entity
+                types = entity[fi].split("|")  # fi == field with type of entity
                 if full_path:
                     types = self.get_full_paths(types)
                 else:
                     types = self.get_all_tcs(types)
-                types = '|'.join(types)
+                types = "|".join(types)
                 entity[fi] = types
             if output_file:
                 self.write_entity_to_tsv(entity, output_file)
@@ -378,10 +404,10 @@ class ClassRelationsBuilder(parseJson2.WikidataDumpManipulator):
         # RuntimeError: dictionary changed size during iteration
         for class_id in list(self.classes.keys()):
             # add this class as successor of all its ancestors
-            for ancestor in self.classes[class_id]['ancestors']:
+            for ancestor in self.classes[class_id]["ancestors"]:
                 self.add_successor(ancestor, class_id)
             # add this class as ancestor of all its successors
-            for successor in self.classes[class_id]['successors']:
+            for successor in self.classes[class_id]["successors"]:
                 self.add_ancestor(successor, class_id)
 
     def get_all_successors(self, class_id):
@@ -394,7 +420,7 @@ class ClassRelationsBuilder(parseJson2.WikidataDumpManipulator):
 
         i = 0
         while i < len(successors):
-            for subclass in self.classes[successors[i]]['successors']:
+            for subclass in self.classes[successors[i]]["successors"]:
                 if subclass not in successors:  # detect cyclic dependency
                     successors.append(subclass)
             i += 1
@@ -413,7 +439,7 @@ class ClassRelationsBuilder(parseJson2.WikidataDumpManipulator):
 
         i = 0
         while i < len(ancestors):
-            for superclass in self.classes[ancestors[i]]['ancestors']:
+            for superclass in self.classes[ancestors[i]]["ancestors"]:
                 if superclass not in ancestors:
                     ancestors.append(superclass)
             i += 1
@@ -452,7 +478,7 @@ class ClassRelationsBuilder(parseJson2.WikidataDumpManipulator):
         :param output_file: tsv file where relations will be saved to
         """
         for class_id in self.classes:
-            for ancestor in self.classes[class_id]['ancestors']:
+            for ancestor in self.classes[class_id]["ancestors"]:
                 self.write_entity_to_tsv([class_id, ancestor], output_file)
 
     def expand_instances(self, output_file, full_path=False):
@@ -481,10 +507,16 @@ def main():
     # check dependent parameters
     if args.replace_types and not args.entities_output_file:
         sys.stderr.write("Output file for processed entities is not set!\n")
-        sys.stderr.write("Use '--help' for more information about '--replace-types' option!\n")
+        sys.stderr.write(
+            "Use '--help' for more information about '--replace-types' option!\n"
+        )
         return 1
 
-    if args.save_dump and not args.instance_relations_dump and not args.class_relations_dump:
+    if (
+        args.save_dump
+        and not args.instance_relations_dump
+        and not args.class_relations_dump
+    ):
         sys.stderr.write("'-s' option is set, but nothing to save!\n")
         sys.stderr.write("Use '--help' to see '-c' and '-i' options!")
         return 1
@@ -509,11 +541,14 @@ def main():
             if args.verbose:
                 print("Loading class dump from file.")
             try:
-                file = open(args.class_relations_dump, 'r')
+                file = open(args.class_relations_dump, "r")
                 crb.load_dump(file)
                 file.close()
             except IOError:
-                sys.stderr.write("Failed to read class relations dump file!\n")
+                sys.stderr.write(
+                    "Failed to read class relations dump file "
+                    f"({args.class_relations_dump})!\n"
+                )
                 return 1
 
     # load distributed instance dump
@@ -532,7 +567,7 @@ def main():
             if args.verbose:
                 print("Loading instances from file.")
             try:
-                file = open(args.instance_relations_dump, 'r')
+                file = open(args.instance_relations_dump, "r")
                 crb.load_instances(file)
                 file.close()
             except IOError:
@@ -552,7 +587,7 @@ def main():
         if args.verbose:
             print("Expanding instances and storing them to file.")
         try:
-            output = open(args.expanded_instances, 'w')
+            output = open(args.expanded_instances, "w")
             crb.expand_instances(output, args.full_path)
             output.close()
         except IOError:
@@ -564,7 +599,7 @@ def main():
         if args.verbose:
             print("Generating transitive closure and storing in to file.")
         try:
-            output = open(args.superclass_tc, 'w')
+            output = open(args.superclass_tc, "w")
             crb.get_superclass_tc(output)
             output.close()
         except IOError:
@@ -582,7 +617,7 @@ def main():
         if args.verbose:
             print("Generating list of subclasses and storing it to file.")
         try:
-            output = open(args.subclasses, 'w')
+            output = open(args.subclasses, "w")
             crb.get_subclass_list(output)
             output.close()
         except IOError:
@@ -594,16 +629,20 @@ def main():
         if args.verbose:
             print("Replacing types of entities with tc.")
         try:
-            output = open(args.entities_output_file, 'w')
-            input_entities = open(args.replace_types, 'r')
-            crb.replace_types_of_entities(input_entities, output, args.field_index, args.full_path)
+            output = open(args.entities_output_file, "w")
+            input_entities = open(args.replace_types, "r")
+            crb.replace_types_of_entities(
+                input_entities, output, args.field_index, args.full_path
+            )
             output.close()
             input_entities.close()
         except IOError:
             sys.stderr.write("Failed to replace types of entities!\n")
             error_code = 1
         except RuntimeError:
-            sys.stderr.write("Internal runtime error!\nFailed to replace types of entities!\n")
+            sys.stderr.write(
+                "Internal runtime error!\nFailed to replace types of entities!\n"
+            )
             error_code = 1
 
     # save tsv
@@ -611,7 +650,7 @@ def main():
         if args.verbose:
             print("Storing classes to tsv file.")
         try:
-            output = open(args.tsv, 'w')
+            output = open(args.tsv, "w")
             crb.save_tsv(output)
             output.close()
         except IOError:
@@ -624,7 +663,7 @@ def main():
             if args.verbose:
                 print("Saving class dump to file.")
             try:
-                file = open(args.class_relations_dump, 'w')
+                file = open(args.class_relations_dump, "w")
                 crb.save_dump(file)
                 file.close()
             except IOError:
@@ -635,7 +674,7 @@ def main():
             if args.verbose:
                 print("Saving instances to file.")
             try:
-                file = open(args.instance_relations_dump, 'w')
+                file = open(args.instance_relations_dump, "w")
                 crb.save_instances(file)
                 file.close()
             except IOError:
@@ -645,5 +684,5 @@ def main():
     return error_code
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

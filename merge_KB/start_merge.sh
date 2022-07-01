@@ -17,7 +17,12 @@ list_dumps=false
 print_help=false
 dump_name=''
 lang='cs'
+tag='default'
 unknown=''
+
+. "${wikidata2}/wikidata_lib.sh"
+
+echo "Script \"${0}\" called with params: ${@}"
 
 # parse params
 while true; do
@@ -62,6 +67,22 @@ while true; do
 			lang="$(echo "$1" | sed 's/^..\(.*\)/\1/')"
 			shift
 			;;
+    --tag|-t )
+      lang="$2"
+      if [ -z "$2" ]; then
+        >&2 echo "Tag name missing!"
+        exit 1
+      fi
+      shift 2
+      ;;
+    --tag=* )
+      tag="$(echo "$1" | awk -F'=' '{ print $2 }')"
+      shift
+      ;;
+    -t* )
+      tag="$(echo "$1" | sed 's/^..\(.*\)/\1/')"
+      shift
+      ;;
 		* )
 			unknown="$1"
 			break
@@ -72,15 +93,18 @@ done
 # help
 if $print_help; then
 	echo "Usage:"
-	echo "  sh start_merge.sh [ --dump DUMP_NAME] [ --lang LANGUAGE ]"
+	echo "  sh start_merge.sh [--dump DUMP_NAME] [--lang LANGUAGE] [--tag TAG]"
 	echo "Example:"
 	echo "  sh start_merge.sh --dump=wikidata-20210301-all.json"
 	echo "Arguments:"
 	echo "  --dump|-d  Name of dump to merge. Dump name is name of folder in"
-	echo "             $wikidata2/tsv_extracted_from_wikidata/"
+	echo "             `getProjectOutRootDir "${wikidata2}"`"
 	echo "             Default dump is the latest one."
-	echo "  --lang|-g  Language of the merged kb. Default is czech (cs)."
+	echo "  --lang|-g  Language of the merged kb (default: \"${lang}\")."
 	echo "  --list|-l  List available dumps."
+	echo "  --tag|-t   Tag output directory which allows to distinguish"
+  echo "             outputs in case of multiple processing same dump"
+  echo "             and same language (default: \"${tag}\")."
 	echo "  --help|-h  Print help."
 	echo "Description:"
 	echo "  Merges data from wikidata2 and entity_kb_czech9 projects."
@@ -90,7 +114,7 @@ fi
 # list dump names
 if $list_dumps; then
 	echo "Available dumps:"
-	for f in $(ls "$wikidata2"/tsv_extracted_from_wikidata/);
+	for f in $(ls "$wikidata_out_dir/");
 	do
 		echo "$f"
 	done
@@ -102,24 +126,26 @@ if [ -z "$dump_name" ]; then
 	dump_name="$(sh "$0" --list | tail -n1)"
 fi
 
+wikidata_out_dir=`getProjectOutBaseDir "${dump_name}" "${lang}" "${tag}" "${wikidata2}"`
+
 # pring language warning
 if [ "$lang" != 'cs' ]; then
-	echo "Selected language is $lang"'!' >&2
+	echo "Selected language is ${lang}!" >&2
 	echo 'This language might not be supported by all merged KBs!' >&2
 fi
 
-[ -d "$wikidata2"/tsv_extracted_from_wikidata/"$dump_name" ] || { echo "Dump $dump_name not available"'!' >&2; exit 1; }
+[ -d "${wikidata_out_dir}" ] || { echo "Dump \"${dump_name}\" not available for language \"${lang}\" and tag \"${tag}\"!" >&2; exit 1; }
 
-wikidata_person="$wikidata2"/tsv_extracted_from_wikidata/"$dump_name"/"`echo "$dump_name" | sed 's/-all.json//'`"-"$lang"-person.tsv
-wikidata_arist="$wikidata2"/tsv_extracted_from_wikidata/"$dump_name"/"`echo "$dump_name" | sed 's/-all.json//'`"-"$lang"-artist.tsv
-wikidata_event="$wikidata2"/tsv_extracted_from_wikidata/"$dump_name"/"`echo "$dump_name" | sed 's/-all.json//'`"-"$lang"-event.tsv
-wikidata_organization="$wikidata2"/tsv_extracted_from_wikidata/"$dump_name"/"`echo "$dump_name" | sed 's/-all.json//'`"-"$lang"-organization.tsv
+wikidata_person=`getWikidataFilePathForType "${dump_name}" "${lang}" "${tag}" "${wikidata2}" "person"`
+wikidata_arist=`getWikidataFilePathForType "${dump_name}" "${lang}" "${tag}" "${wikidata2}" "artist"`
+wikidata_event=`getWikidataFilePathForType "${dump_name}" "${lang}" "${tag}" "${wikidata2}" "event"`
+wikidata_organization=`getWikidataFilePathForType "${dump_name}" "${lang}" "${tag}" "${wikidata2}" "organization"`
 
 # unmerged data
-wikidata_groups="$wikidata2"/tsv_extracted_from_wikidata/"$dump_name"/"`echo "$dump_name" | sed 's/-all.json//'`"-"$lang"-group.tsv
-wikidata_geographical="$wikidata2"/tsv_extracted_from_wikidata/"$dump_name"/"`echo "$dump_name" | sed 's/-all.json//'`"-"$lang"-geographical.tsv
+wikidata_groups=`getWikidataFilePathForType "${dump_name}" "${lang}" "${tag}" "${wikidata2}" "group"`
+wikidata_geographical=`getWikidataFilePathForType "${dump_name}" "${lang}" "${tag}" "${wikidata2}" "geographical"`
 
-[ -f "$wikidata_person" ] || { echo "No data for selected language"'!' >&2; exit 1; }
+[ -f "$wikidata_person" ] || { echo "No data for selected language!" >&2; exit 1; }
 
 entity_kb_czech9_artist="$entity_kb_czech9"/final/vizual_umelci
 entity_kb_czech9_event="$entity_kb_czech9"/final/udalosti
