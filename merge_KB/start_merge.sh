@@ -67,22 +67,22 @@ while true; do
 			lang="$(echo "$1" | sed 's/^..\(.*\)/\1/')"
 			shift
 			;;
-    --tag|-t )
-      lang="$2"
-      if [ -z "$2" ]; then
-        >&2 echo "Tag name missing!"
-        exit 1
-      fi
-      shift 2
-      ;;
-    --tag=* )
-      tag="$(echo "$1" | awk -F'=' '{ print $2 }')"
-      shift
-      ;;
-    -t* )
-      tag="$(echo "$1" | sed 's/^..\(.*\)/\1/')"
-      shift
-      ;;
+		--tag|-t )
+			lang="$2"
+			if [ -z "$2" ]; then
+				>&2 echo "Tag name missing!"
+				exit 1
+			fi
+			shift 2
+			;;
+		--tag=* )
+			tag="$(echo "$1" | awk -F'=' '{ print $2 }')"
+			shift
+			;;
+		-t* )
+			tag="$(echo "$1" | sed 's/^..\(.*\)/\1/')"
+			shift
+			;;
 		* )
 			unknown="$1"
 			break
