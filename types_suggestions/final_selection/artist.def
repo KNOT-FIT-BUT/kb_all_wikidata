@@ -1,0 +1,304 @@
+1318	Q483501	artist
+523	Q639669	musician
+466	Q3391743	visual artist
+242	Q713200	performing artist
+180	Q1278335	instrumentalist
+162	Q2643890	vocalist
+154	Q177220	singer
+122	Q5322166	designer
+98	Q1028181	painter
+90	Q33999	actor
+68	Q15296811	drawer
+46	Q3455803	director
+45	Q36834	composer
+41	Q33231	photographer
+41	Q1925963	graphic artist
+40	Q42973	architect
+38	Q7541856	ceramicist
+37	Q97572814	wind instrument player
+31	Q5716684	dancer
+31	Q10774753	performance artist
+28	Q138858	entertainer
+27	Q15301511	vase painter
+26	Q30903	soprano
+25	Q644687	illustrator
+25	Q47090899	museum professional
+24	Q98552221	plastic artist
+24	Q627325	graphic designer
+23	Q674426	curator
+23	Q27914	tenor
+23	Q1281618	sculptor
+23	Q11569986	printmaker
+23	Q1075651	keyboardist
+21	Q98084799	professional photographer
+21	Q18714098	Greek vase-painter
+20	Q753110	songwriter
+20	Q2914170	street artist
+19	Q81729632	classical musician
+19	Q2526255	film director
+19	Q158852	conductor
+18	Q25829748	brass player
+18	Q17307272	circus performer
+17	Q4351403	percussionist
+17	Q2259451	stage actor
+17	Q15981151	jazz musician
+17	Q101546515	woodwind instrument player
+16	Q755070	storyteller
+14	Q855091	guitarist
+14	Q488205	singer-songwriter
+14	Q3630699	game designer
+12	Q329439	engraver
+12	Q266569	animator
+11	Q245068	comedian
+10	Q1414443	filmmaker
+9	Q715301	comics artist
+9	Q486748	pianist
+9	Q22811707	decorator
+9	Q10694573	textile artist
+8	Q55960555	recording artist
+8	Q4233718	anonymous
+8	Q386854	drummer
+8	Q29017403	rock musician
+8	Q12406482	humorist
+7	Q765778	organist
+7	Q7016454	new media artist
+7	Q1259917	violinist
+6	Q446966	conservator
+6	Q3400050	potter
+6	Q2865819	opera singer
+6	Q28107590	concept artist
+6	Q2405480	voice actor
+6	Q226008	Japanese idol
+6	Q1840507	carver
+6	Q1643514	music arranger
+6	Q16145150	music pedagogue
+6	Q1399352	featuring
+6	Q130857	disc jockey
+6	Q10800557	film actor
+5	Q805221	ballet dancer
+5	Q7358	clown
+5	Q66763670	country musician
+5	Q59922524	court artist
+5	Q584301	bassist
+5	Q2490358	choreographer
+5	Q2429735	jongleur
+5	Q22812879	digital artist
+5	Q215144	bard
+5	Q1658894	illusionist
+5	Q11957145	acrobat
+4	Q82723	geisha
+4	Q806349	bandleader
+4	Q7042855	film editor
+4	Q67200506	metal musician
+4	Q6138343	wood carver
+4	Q58192	coloratura soprano
+4	Q53236130	chief architect
+4	Q3303330	calligrapher
+4	Q21166956	lutenist
+4	Q1954956	musical theatre actor
+4	Q1800680	amateur actor
+4	Q1734662	cartographer
+4	Q16023925	storyteller
+4	Q12800682	saxophonist
+4	Q1076502	choir director
+4	Q103958625	brass teacher
+3	Q930701	gamemaster
+3	Q780596	art exhibition curator
+3	Q7558519	soloist
+3	Q58287519	video game developer
+3	Q544972	trombonist
+3	Q52630241	group member
+3	Q488111	pornographic actor
+3	Q465501	stunt performer
+3	Q42303786	blues musician
+3	Q3922505	music producer
+3	Q355493	church musician
+3	Q3374326	muralist
+3	Q3127709	harpist
+3	Q2962070	production designer
+3	Q28834867	CG artist
+3	Q2865798	glass artist
+3	Q2815948	landscape architect
+3	Q28110454	layout artist
+3	Q2519376	jewelry designer
+3	Q215793	kapellmeister
+3	Q21560152	special effects artist
+3	Q215548	jester
+3	Q21505859	ancient Greek potter
+3	Q20521670	bass-guitarist
+3	Q186370	troubadour
+3	Q183945	record producer
+3	Q1825525	limner
+3	Q177718	sideman
+3	Q1765879	leading actor
+3	Q12377274	trumpeter
+3	Q1183704	decoration painter
+3	Q11654943	kadozuke
+2	Q99439671	natural history museum curator
+2	Q984276	court painter
+2	Q95918723	Takarasienne
+2	Q957729	photojournalist
+2	Q658371	extra
+2	Q65408013	roleplayer
+2	Q55473978	Q55473978
+2	Q53829839	child soprano
+2	Q5213042	dan
+2	Q4854747	bandurist
+2	Q4839644	background artist
+2	Q474968	anonymous master
+2	Q4688043	aerialist
+2	Q3501317	fashion designer
+2	Q3490626	sonneur
+2	Q3387717	theater director
+2	Q3312506	spinto
+2	Q330679	cantor
+2	Q3024424	sound designer
+2	Q2850035	key animator
+2	Q28122926	character animator
+2	Q2700922	clockmaker
+2	Q2629392	puppeteer
+2	Q2393361	dancing master
+2	Q21680663	classical composer
+2	Q2164335	dramatic soprano
+2	Q2133309	interior designer
+2	Q21178131	portraitist
+2	Q21169216	actress
+2	Q211423	goldsmith
+2	Q20002503	story artist
+2	Q19729565	horn player
+2	Q19507792	scientific illustrator
+2	Q18882335	video game designer
+2	Q16154896	session musician
+2	Q15855449	magician
+2	Q1544133	game author
+2	Q15303031	black-figure vase painter
+2	Q1371914	soloist
+2	Q12902372	flautist
+2	Q11606851	Q11606851
+2	Q1148872	impressionist
+2	Q1114448	cartoonist
+2	Q10384150	transformist
+2	Q102277154	pop musican
+2	Q101084010	folk musician
+1	Q98523719	reggae musician
+1	Q98085825	aerial photographer
+1	Q97468869	French horn player
+1	Q96044701	flower artist
+1	Q936371	rhapsode
+1	Q899758	violist
+1	Q88821468	fado musician
+1	Q85719095	merengue musician
+1	Q836983	Soubrette
+1	Q81759238	music professor
+1	Q779815	animation director
+1	Q7603655	state architect
+1	Q739437	poster artist
+1	Q71054529	balladeer
+1	Q683754	drafter
+1	Q67378332	rock guitarist
+1	Q66314404	jazz singer
+1	Q64947937	Q64947937
+1	Q64353861	jazz bassist
+1	Q64005969	calypso musician
+1	Q63538345	video game director
+1	Q63243029	gospel musician
+1	Q62974259	rock drummer
+1	Q62900222	juggler
+1	Q61465891	seal cutter
+1	Q61045693	front person
+1	Q60723829	pop singer
+1	Q60614352	uncredited artist
+1	Q59755918	anonymous
+1	Q56312678	ceramic painter
+1	Q55959737	cover artist
+1	Q5358395	electronic musician
+1	Q51679083	sitarist
+1	Q5116158	animalier
+1	Q4854651	bandmaster
+1	Q47494964	miniaturist
+1	Q46984315	quilter
+1	Q3623165	armourer
+1	Q3560496	fiddler
+1	Q3482594	showgirl
+1	Q3297652	cast member
+1	Q3191582	game artist
+1	Q3153559	music interpreter
+1	Q30157837	operetta singer
+1	Q2994440	heritage curator
+1	Q29448653	accompanist
+1	Q2936570	cantatrice
+1	Q29000720	CG modeler
+1	Q28966333	needleworker
+1	Q28834881	computer animator
+1	Q28813302	clean-up artist
+1	Q28798045	assistant animator
+1	Q2860261	urban architect
+1	Q28552423	matte painter
+1	Q2833480	stunt coordinator
+1	Q28122965	effects animator
+1	Q28039322	story supervisor
+1	Q28007056	supervising animator
+1	Q28007028	layout supervisor
+1	Q27472738	cover artist
+1	Q25510513	city architect
+1	Q2532239	folk singer
+1	Q2465389	reed player
+1	Q24574678	cornetist
+1	Q24236999	virtual idol
+1	Q24056480	porcelain painter
+1	Q24054289	dangdut singers
+1	Q2350126	vocal coach
+1	Q22343406	media artist
+1	Q222344	cinematographer
+1	Q21855974	vibraphonist
+1	Q21282419	attic vase-painter
+1	Q20850090	harmonicist
+1	Q2059704	television director
+1	Q19828933	equilibrist
+1	Q19588578	experimental musician
+1	Q1929552	principal dancer
+1	Q1899943	entertainer
+1	Q18810049	cosplayer
+1	Q18611810	textile designer
+1	Q18545066	stand-up comedian
+1	Q18340078	tamer
+1	Q1823479	lighting designer
+1	Q17456089	pornographic film director
+1	Q17378128	spoken word artist
+1	Q1708232	medalist
+1	Q16947657	lithographer
+1	Q16156383	tuba player
+1	Q16009483	sideshow performer
+1	Q16003954	oboist
+1	Q15977509	industrial designer
+1	Q157798	watchmaker
+1	Q15432439	garden designer
+1	Q15214752	cabaret artist
+1	Q1415090	film score composer
+1	Q1401208	lyric soprano
+1	Q13474373	professional wrestler
+1	Q1344569	prankster
+1	Q1328668	gravure idol
+1	Q1327329	multi-instrumentalist
+1	Q13219637	cellist
+1	Q13138067	string musician
+1	Q12368980	nature photographer
+1	Q1214796	double-bassist
+1	Q11892507	comics writer
+1	Q118865	clarinetist
+1	Q11620676	rakugoka
+1	Q11529480	matsubayashi
+1	Q11486702	architectural historian
+1	Q1141526	stripper
+1	Q11344371	model maker
+1	Q1111648	colorist
+1	Q10862983	etcher
+1	Q104236974	White House photographer
+1	Q104224860	disco musician
+1	Q104224753	dansband musician
+1	Q104218554	rock singer
+1	Q1027930	webcam model
+1	Q101579657	clavichordist
+1	Q101573121	percussion teacher
+1	Q100493654	hip hop musician
+1	Q100269042	tango singer
