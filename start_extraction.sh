@@ -69,7 +69,7 @@ while true; do
       shift
       ;;
     --tag|-t )
-      lang="$2"
+      tag="$2"
       if [ -z "$2" ]; then
         >&2 echo "Tag name missing!"
         exit 1
