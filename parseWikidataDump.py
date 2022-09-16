@@ -19,6 +19,15 @@ import parseJson2  # for wikidata dump manipulator
 # get script name
 SCRIPT_NAME = os.path.basename(sys.argv[0])
 
+try:
+    for k in ["DIRNAME_CLASSES", "DIRNAME_DICTS", "DIRNAME_EXPANDED_INSTANCES", "DIRNAME_INSTANCES", "DIRNAME_LOCAL_PROCESSING", "DIRNAME_TYPES_DATA"]:
+        os.environ[k]
+except KeyError as x:
+    from configobj import ConfigObj
+    config = ConfigObj("env_variables.cfg")
+    for k, v in config.items():
+        os.environ[k] = v
+
 
 def get_args():
     """

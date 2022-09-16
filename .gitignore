@@ -7,6 +7,10 @@ tmp_extracted_data/
 # exclude python cache
 __pycache__/
 
-# exclude generated log files
+# exclude generated output, log and other files
 *.log
+*.names
+*.subclass_list
+*.tc
+*.tsv
 

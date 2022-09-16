@@ -8,7 +8,7 @@
 
 # constants
 project_folder="$(readlink -f $0 | xargs -I{} dirname {})"
-wikidata2="$(echo "$project_folder" | xargs -I{} dirname {})"
+wikidata2_path="$(echo "$project_folder" | xargs -I{} dirname {})"
 entity_kb_czech9=/mnt/minerva1/nlp/projects/entity_kb_czech9
 kb_compare="$project_folder"/kb_tools/kb_compare.py
 
@@ -20,7 +20,7 @@ lang='cs'
 tag='default'
 unknown=''
 
-. "${wikidata2}/wikidata_lib.sh"
+. "${wikidata2_path}/wikidata_lib.sh"
 
 echo "Script \"${0}\" called with params: ${@}"
 
@@ -98,7 +98,7 @@ if $print_help; then
 	echo "  sh start_merge.sh --dump=wikidata-20210301-all.json"
 	echo "Arguments:"
 	echo "  --dump|-d  Name of dump to merge. Dump name is name of folder in"
-	echo "             `getProjectOutRootDir "${wikidata2}"`"
+	echo "             `getProjectOutRootDir "${wikidata2_path}"`"
 	echo "             Default dump is the latest one."
 	echo "  --lang|-g  Language of the merged kb (default: \"${lang}\")."
 	echo "  --list|-l  List available dumps."
@@ -111,10 +111,12 @@ if $print_help; then
 	exit 0
 fi
 
+wikidata_out_rootdir=`getProjectOutRootDir "${wikidata2_path}"`
+
 # list dump names
 if $list_dumps; then
 	echo "Available dumps:"
-	for f in $(ls "$wikidata_out_dir/");
+	for f in $(ls "$wikidata_out_rootdir/");
 	do
 		echo "$f"
 	done
@@ -126,8 +128,7 @@ if [ -z "$dump_name" ]; then
 	dump_name="$(sh "$0" --list | tail -n1)"
 fi
 
-wikidata_out_dir=`getProjectOutBaseDir "${dump_name}" "${lang}" "${tag}" "${wikidata2}"`
-
+wikidata_out_dir=`getProjectOutBaseDir "${dump_name}" "${lang}" "${tag}" "${wikidata2_path}"`
 # pring language warning
 if [ "$lang" != 'cs' ]; then
 	echo "Selected language is ${lang}!" >&2
@@ -136,14 +137,14 @@ fi
 
 [ -d "${wikidata_out_dir}" ] || { echo "Dump \"${dump_name}\" not available for language \"${lang}\" and tag \"${tag}\"!" >&2; exit 1; }
 
-wikidata_person=`getWikidataFilePathForType "${dump_name}" "${lang}" "${tag}" "${wikidata2}" "person"`
-wikidata_arist=`getWikidataFilePathForType "${dump_name}" "${lang}" "${tag}" "${wikidata2}" "artist"`
-wikidata_event=`getWikidataFilePathForType "${dump_name}" "${lang}" "${tag}" "${wikidata2}" "event"`
-wikidata_organization=`getWikidataFilePathForType "${dump_name}" "${lang}" "${tag}" "${wikidata2}" "organization"`
+wikidata_person=`getWikidataFilePathForType "${dump_name}" "${lang}" "${tag}" "${wikidata2_path}" "person"`
+wikidata_arist=`getWikidataFilePathForType "${dump_name}" "${lang}" "${tag}" "${wikidata2_path}" "artist"`
+wikidata_event=`getWikidataFilePathForType "${dump_name}" "${lang}" "${tag}" "${wikidata2_path}" "event"`
+wikidata_organization=`getWikidataFilePathForType "${dump_name}" "${lang}" "${tag}" "${wikidata2_path}" "organization"`
 
 # unmerged data
-wikidata_groups=`getWikidataFilePathForType "${dump_name}" "${lang}" "${tag}" "${wikidata2}" "group"`
-wikidata_geographical=`getWikidataFilePathForType "${dump_name}" "${lang}" "${tag}" "${wikidata2}" "geographical"`
+wikidata_groups=`getWikidataFilePathForType "${dump_name}" "${lang}" "${tag}" "${wikidata2_path}" "group"`
+wikidata_geographical=`getWikidataFilePathForType "${dump_name}" "${lang}" "${tag}" "${wikidata2_path}" "geographical"`
 
 [ -f "$wikidata_person" ] || { echo "No data for selected language!" >&2; exit 1; }
 

@@ -2,13 +2,25 @@
 # Author: Tomáš Volf, ivolf@fit.vutbr.cz
 
 FILE_MASTER_IPS=.master_ip_addresses.cfg
-export DIRNAME_CLASSES=classes
-export DIRNAME_DICTS=dicts
-export DIRNAME_EXPANDED_INSTANCES=expanded_instances_kb
-export DIRNAME_INSTANCES=instances
-export DIRNAME_LOCAL_PROCESSING=local_partial_data
-export DIRNAME_TYPES_DATA=types_data
+_wikidata_lib_sh_path=`readlink -f $0`
 
+if test -z "${BASH_SOURCE}"
+then
+  _wikidata_lib_dir=${_wikidata_lib_sh_path}
+else
+  _wikidata_lib_dir=${BASH_SOURCE[0]}
+fi
+
+if test -z "${wikidata2_path}"
+then
+  _env_variables_dir=`echo -n "${_wikidata_lib_dir}" | xargs -I{} dirname {}`
+else
+  _env_variables_dir=${wikidata2_path}
+fi
+
+set -a
+  . ${_env_variables_dir}/env_variables.cfg
+set +a
 
 getProcessingBaseDir() {
   dump_name="${1}"
