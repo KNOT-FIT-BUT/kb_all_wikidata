@@ -6,17 +6,12 @@
 # description: merges separate type files into KB
 
 project_folder="$(readlink -f $0 | xargs -I{} dirname {})"
-person_file="$project_folder"/output/persons_unmerged.tsv
-group_file="$project_folder"/output/groups_wikidata2.tsv
-artist_file="$project_folder"/output/artists_merged.tsv
-geographical_file="$project_folder"/output/geographical_wikidata2.tsv
-event_file="$project_folder"/output/events_merged.tsv
-organization_file="$project_folder"/output/organizations_merged.tsv
-
-output_file="$project_folder"/output/KB.tsv
+output_dirname="output"
 
 # unknown args
 unknown=''
+
+echo "Script \"${0}\" called with params: ${@}"
 
 # get value of argument given as -avalue
 get_simple_arg_value() {
@@ -26,6 +21,10 @@ get_simple_arg_value() {
 # get value of argument given as --arg=value
 get_arg_value() {
 	echo "$(echo "$1" | awk -F'=' '{ print $2 }')"
+}
+
+get_output_path() {
+	echo "${project_folder}/${output_dirname}/${dump_name}/${lang}/${1}"
 }
 
 help() {
@@ -150,7 +149,8 @@ while true; do
 			shift
 			;;
 		--dump=* )
-			dump_version=`echo "$(get_arg_value "$1")" | sed 's/wikidata-\([0-9]\{8\}\)-.*.json/\1/'`
+			dump_name=$(get_arg_value "${1}")
+			dump_version=`echo "${dump_name}" | sed 's/wikidata-\([0-9]\{8\}\)-.*.json/\1/'`
 			shift
 			;;
 		--help|-h )
@@ -169,8 +169,19 @@ if [ -n "$unknown" ]; then
 	exit 1
 fi
 
+output_file=$(get_output_path "KB.tsv")
+
+person_file=${person_file:=`get_output_path "persons_unmerged.tsv"`}
+group_file=${group_file:=`get_output_path "groups_wikidata2.tsv"`}
+artist_file=${artist_file:=`get_output_path "artists_merged.tsv"`}
+geographical_file=${geographical_file:=`get_output_path "geographical_wikidata2.tsv"`}
+event_file=${event_file:=`get_output_path "events_merged.tsv"`}
+organization_file=${organization_file:=`get_output_path "organizations_merged.tsv"`}
+
+output_dir=`dirname "${output_file}"`
+
 # setup - create output folder
-[ -d "$project_folder"/output ] || mkdir "$project_folder"/output
+[ -d "${output_dir}" ] || mkdir -p "${output_dir}"
 
 echo 'Merging output files into KB'
 

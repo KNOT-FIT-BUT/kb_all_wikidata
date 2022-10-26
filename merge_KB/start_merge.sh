@@ -159,74 +159,83 @@ for t in artist event organization; do
 	fi
 done
 
+tmp_dir="${project_folder}/tmp/${dump_name}/${lang}"
+output_dir="${project_folder}/output/${dump_name}/${lang}"
+
 # setup
-[ -d "$project_folder"/output ] || mkdir "$project_folder"/output  # create output folder
+[ -d "${tmp_dir}" ] || mkdir -p "${tmp_dir}" # create temporary working folder
+[ -d "${output_dir}" ] || mkdir -p "${output_dir}" # create output folder
+
+mkdir "${tmp_dir}/artists/"
+mkdir "${tmp_dir}/organizations/"
+mkdir "${tmp_dir}/events/"
+
 # entity_kb_czech9
-cp "$entity_kb_czech9_artist" "$project_folder"/artists/ENTITY_KB_CZECH9
-cp "$entity_kb_czech9_event" "$project_folder"/events/ENTITY_KB_CZECH9
-cp "$entity_kb_czech9_organization" "$project_folder"/organizations/ENTITY_KB_CZECH9
+cp "$entity_kb_czech9_artist" "${tmp_dir}/artists/ENTITY_KB_CZECH9"
+cp "$entity_kb_czech9_event" "${tmp_dir}/events/ENTITY_KB_CZECH9"
+cp "$entity_kb_czech9_organization" "${tmp_dir}/organizations/ENTITY_KB_CZECH9"
 # wikidata2
 # remove the leading type specific prefix, for compatibility with entity_kb_czech9
-sed -f "$project_folder"/remove_prefix.sed "$wikidata_person" > "$project_folder"/artists/WIKIDATA2_PERSONS_ALL
-sed -f "$project_folder"/remove_prefix.sed "$wikidata_arist" > "$project_folder"/artists/WIKIDATA2
-sed -f "$project_folder"/remove_prefix.sed "$wikidata_organization" > "$project_folder"/organizations/WIKIDATA2
-sed -f "$project_folder"/remove_prefix.sed "$wikidata_event" > "$project_folder"/events/WIKIDATA2
+sed -f "$project_folder"/remove_prefix.sed "$wikidata_person" > "${tmp_dir}/artists/WIKIDATA2_PERSONS_ALL"
+sed -f "$project_folder"/remove_prefix.sed "$wikidata_arist" > "${tmp_dir}/artists/WIKIDATA2"
+sed -f "$project_folder"/remove_prefix.sed "$wikidata_organization" > "${tmp_dir}/organizations/WIKIDATA2"
+sed -f "$project_folder"/remove_prefix.sed "$wikidata_event" > "${tmp_dir}/events/WIKIDATA2"
 
 # copy unmerged files
-sed -f "$project_folder"/remove_prefix.sed "$wikidata_groups" > "$project_folder"/output/groups_wikidata2.tsv
-sed -f "$project_folder"/remove_prefix.sed "$wikidata_geographical" > "$project_folder"/output/geographical_wikidata2.tsv
+sed -f "$project_folder"/remove_prefix.sed "$wikidata_groups" > "${output_dir}/groups_wikidata2.tsv"
+sed -f "$project_folder"/remove_prefix.sed "$wikidata_geographical" > "${output_dir}/geographical_wikidata2.tsv"
 
 # start merge
 cf="$pwd" # save location
+tmp_artists_dir="${tmp_dir}/artists"
 cd "$project_folder"/artists/
 # select artists by id from wikidata2 persons
-awk -F'\t' 'NR==FNR{ id[$1]++; next } (id[$1]){ print }' ENTITY_KB_CZECH9 WIKIDATA2_PERSONS_ALL > WIKIDATA2_PERSONS
+awk -F'\t' 'NR==FNR{ id[$1]++; next } (id[$1]){ print }' "${tmp_artists_dir}/ENTITY_KB_CZECH9" "${tmp_artists_dir}/WIKIDATA2_PERSONS_ALL" > "${tmp_artists_dir}/WIKIDATA2_PERSONS"
 # merge wikidata2 persons and entity_kb_czech9 artists
 python3 "$kb_compare" \
-	--first WIKIDATA2_PERSONS \
-	--second ENTITY_KB_CZECH9 \
+	--first "${tmp_artists_dir}/WIKIDATA2_PERSONS" \
+	--second "${tmp_artists_dir}/ENTITY_KB_CZECH9" \
 	--first_fields WIKIDATA2_PERSONS.fields \
 	--second_fields ENTITY_KB_CZECH9.fields \
 	--rel_conf wikidata2_persons_entity_kb_rel.conf \
 	--output_conf wikidata2_persons_output.conf \
 	--other_output_conf wikidata2_persons_other_output.conf \
-	--output PERSONS_ARTISTS_MERGED \
+	--output "${tmp_artists_dir}/PERSONS_ARTISTS_MERGED" \
 	--treshold 100
 
 # merge wikidata2 artists and entity_kb_czech9 artists
 python3 "$kb_compare" \
-      --first WIKIDATA2 \
-      --second PERSONS_ARTISTS_MERGED \
+      --first "${tmp_artists_dir}/WIKIDATA2" \
+      --second "${tmp_artists_dir}/PERSONS_ARTISTS_MERGED" \
       --first_fields WIKIDATA2.fields \
       --second_fields PERSONS_ARTISTS_MERGED.fields \
       --rel_conf wikidata2_entity_kb_rel.conf \
       --output_conf wikidata2_output.conf \
       --other_output_conf wikidata2_other_output.conf \
-      --output artists_merged.tsv \
+      --output "${output_dir}/artists_merged.tsv" \
       --treshold 100
 
 # Subtract all artists from persons KB
-awk -F'\t' 'NR==FNR{ id[$1]++; next }; (!(id[$1])){ print }' artists_merged.tsv WIKIDATA2_PERSONS_ALL > persons_unmerged.tsv
+awk -F'\t' 'NR==FNR{ id[$1]++; next }; (!(id[$1])){ print }' "${output_dir}/artists_merged.tsv" "${tmp_artists_dir}/WIKIDATA2_PERSONS_ALL" > "${output_dir}/persons_unmerged.tsv"
 
-mv -t "$project_folder"/output/ artists_merged.tsv persons_unmerged.tsv
-rm WIKIDATA2_PERSONS ENTITY_KB_CZECH9 PERSONS_ARTISTS_MERGED WIKIDATA2 WIKIDATA2_PERSONS_ALL
+rm -r "${tmp_artists_dir}"
 
 # merge
 for type in events organizations; do
 	cd "$project_folder/$type/"
+	tmp_type_dir="${tmp_dir}/${type}/"
 	echo "Starting to merge $type KB"
 	python3 "$kb_compare" \
-	      --first WIKIDATA2 \
-	      --second ENTITY_KB_CZECH9 \
+	      --first "${tmp_type_dir}/WIKIDATA2" \
+	      --second "${tmp_type_dir}/ENTITY_KB_CZECH9" \
 	      --first_fields WIKIDATA2.fields \
 	      --second_fields ENTITY_KB_CZECH9.fields \
 	      --rel_conf wikidata2_entity_kb_rel.conf \
 	      --output_conf wikidata2_output.conf \
 	      --other_output_conf wikidata2_other_output.conf \
-	      --output "$type"_merged.tsv \
+	      --output "${output_dir}/${type}_merged.tsv" \
 	      --treshold 100
-	mv -t "$project_folder"/output/ "$type"_merged.tsv
-	rm WIKIDATA2 ENTITY_KB_CZECH9
+	rm -r "${tmp_type_dir}"
 done
 
 # merge files into KB
