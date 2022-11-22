@@ -86,7 +86,7 @@ export out_dir=`getProjectOutBaseDir "${dump_name}" "${lang}" "${tag}" "${projec
 # parse json dump
 echo "Parsing started"
 parsing_start=`timestamp`
-ssh-keyscan -f "${project_folder}/config/hosts.list" >> ~/.ssh/known_hosts
+#ssh-keyscan -f "${project_folder}/config/hosts.list" >> ~/.ssh/known_hosts
 parallel-ssh -h "${project_folder}/config/hosts.list" -p 100 -t 0 -i \
 "[ -d \"$dump_src\" ] && [ -r \"$dump_src\" ] && [ -x \"$dump_src\" ] || { echo \"Can't read data from: $dump_src\" && exit 1; }; \
 [ -d \"${local_types_data_dir}\" ] && [ -w \"${local_types_data_dir}\" ] || mkdir -p \"${local_types_data_dir}\";\
