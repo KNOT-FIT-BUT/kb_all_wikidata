@@ -71,7 +71,7 @@ export dump_name;
 dump_src="${dump_folder}/${dump_name}"
 if [ ! -d "${dump_src}" ]; then
   echo "Selected dump not available!" >&2
-  exit 1
+  exit 10
 fi
 
 export local_processing_dir=`getLocalProcessingBaseDir "${dump_name}" "${lang}" "${tag}"`
@@ -92,10 +92,18 @@ parallel-ssh -h "${project_folder}/config/hosts.list" -p 100 -t 0 -i \
 [ -d \"${local_types_data_dir}\" ] && [ -w \"${local_types_data_dir}\" ] || mkdir -p \"${local_types_data_dir}\";\
 source ${project_folder}/wikidata_lib.sh; \
 cd \"${dump_src}\"; \
+err_file=${local_processing_dir}/err_parsing_`hostname`.err; \
+if test \"`ls -1 ${dump_src} | wc -l`\" == 0 ; then >&2 echo \"No input files found.\"; exit 1; fi; \
 find . -name '*.part????' -printf '%f\n' | \
 parallel -j 6 \
 \"${project_folder}/parseWikidataDump.py\" --language \"$lang\" -e -q -f {} -t \"`echo "{}" | awk -F'.' '{ print $NF }'`\" -p \"${local_processing_dir}\""
+if test "$?" -gt 0
+then
+  >&2 echo "Some error(s) occured while parsing wikidata dump."
+  exit 11
+fi
 parsing_end=`timestamp`
+
 
 # create folder where data will be collected
 recreate_dir "${proj_tmp_dicts_dir}"
@@ -130,12 +138,12 @@ cat "${project_folder}/config/hosts.list" | while read host; do
     then
       >&2 echo "FAILED: -x"
     fi
-    exit 2
+    exit 3
   fi
   if [ ! -d "${proj_tmp_types_data_dir}" ] || [ ! -w "${proj_tmp_types_data_dir}" ] \
   ||  [ ! -d "${proj_tmp_dicts_dir}" ] || [ ! -w "${proj_tmp_dicts_dir}" ]; then
    echo "Failed to write dump data to project folder"'!'" Server: $(cat /etc/hostname)" >&2
-   exit 1
+   exit 4
   fi
 
   # download all types data files
@@ -172,7 +180,7 @@ if [ $? -eq 0 ]; then
   echo "OK"
 else
   echo "FAILED"
-  exit 1
+  exit 20
 fi
 done
 error_code=$?
@@ -188,7 +196,7 @@ fi
 mkdir -p "${out_dir}"
 if [ ! -d "${out_dir}" ] || [ ! -w "${out_dir}" ]; then
   echo "Can't write to ${out_dir} folder!" >&2
-  exit 1
+  exit 30
 fi
 
 # parallel name substitution (on localhost only)
