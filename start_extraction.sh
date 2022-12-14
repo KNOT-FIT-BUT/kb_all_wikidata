@@ -6,8 +6,11 @@
 # project: wikidata2
 # author: Pavel Raur (xraurp00@stud.fit.vutbr.cz)
 # author: Tomáš Volf (ivolf@fit.vut.cz)
+# Can not use readlink, due to calling subscript by absolute path with following symlinks, but there are different mounting points of home folders on nodes.
+# (this absolute path is then used in processing on multiple nodes, which however does not know this absolute path)
+cwd_original=$PWD
 
-project_folder="$(readlink -f $0 | xargs -I{} dirname {})"
+project_folder=$(cd "$(dirname $0)" && pwd)
 export project_folder
 
 export LC_ALL=en_US.UTF-8

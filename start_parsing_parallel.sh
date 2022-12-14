@@ -7,8 +7,10 @@
 # author: Pavel Raur (xraurp00@stud.fit.vutbr.cz)
 # author: Tomáš Volf (ivolf@fit.vut.cz)
 
-# get absolute path to folder this script is in. (/mnt/minerva1/nlp/projects/wikidata2)
-project_folder="$(readlink -f $0 | xargs -I{} dirname {})"
+# Can not use readlink, due to processing on multiple nodes and their different mounting points of home folders
+cwd_original=$PWD
+
+project_folder=$(cd "$(dirname $0)" && pwd)
 export project_folder
 
 # setup folder where dumps part are located
