@@ -176,14 +176,14 @@ cp "$entity_kb_czech9_event" "${tmp_dir}/events/ENTITY_KB_CZECH9"
 cp "$entity_kb_czech9_organization" "${tmp_dir}/organizations/ENTITY_KB_CZECH9"
 # wikidata2
 # remove the leading type specific prefix, for compatibility with entity_kb_czech9
-sed -f "$project_folder"/remove_prefix.sed "$wikidata_person" > "${tmp_dir}/artists/WIKIDATA2_PERSONS_ALL"
-sed -f "$project_folder"/remove_prefix.sed "$wikidata_arist" > "${tmp_dir}/artists/WIKIDATA2"
-sed -f "$project_folder"/remove_prefix.sed "$wikidata_organization" > "${tmp_dir}/organizations/WIKIDATA2"
-sed -f "$project_folder"/remove_prefix.sed "$wikidata_event" > "${tmp_dir}/events/WIKIDATA2"
+cp "$wikidata_person" "${tmp_dir}/artists/WIKIDATA2_PERSONS_ALL"
+cp "$wikidata_arist" "${tmp_dir}/artists/WIKIDATA2"
+cp "$wikidata_organization" "${tmp_dir}/organizations/WIKIDATA2"
+cp "$wikidata_event" "${tmp_dir}/events/WIKIDATA2"
 
 # copy unmerged files
-sed -f "$project_folder"/remove_prefix.sed "$wikidata_groups" > "${output_dir}/groups_wikidata2.tsv"
-sed -f "$project_folder"/remove_prefix.sed "$wikidata_geographical" > "${output_dir}/geographical_wikidata2.tsv"
+cp "$wikidata_groups" "${output_dir}/groups_wikidata2.tsv"
+cp "$wikidata_geographical" "${output_dir}/geographical_wikidata2.tsv"
 
 # start merge
 cf="$pwd" # save location

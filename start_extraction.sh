@@ -165,6 +165,12 @@ if [ $parser_error_code -ne 0 ]; then
   echo "Dump extraction failed!" >&2
   exit $parser_error_code
 fi
+
+for file in ${persons_file} ${group_file} ${artist_file} ${geographical_file} ${event_file} ${organization_file}
+do
+  sed -i "s/^.://" "${file}"
+done
+
 if [ "$lang" = 'cs' ]; then
   # merge dump with entity_kb_czech9
   sh "$merge_script" -d "$dump_name" -g "$lang"
