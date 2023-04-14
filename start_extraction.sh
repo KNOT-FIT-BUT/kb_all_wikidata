@@ -142,10 +142,11 @@ fi
 out_dir=`getProjectOutBaseDir "${dump_name}" "${lang}" "${tag}" "${project_folder}"`
 persons_file="$out_dir"/"$(echo "$dump_name" | sed 's/-all.json//')"-"$lang"-person.tsv
 group_file="$out_dir"/"$(echo "$dump_name" | sed 's/-all.json//')"-"$lang"-group.tsv
-artist_file="$out_dir"/"$(echo "$dump_name" | sed 's/-all.json//')"-"$lang"-artist.tsv
+artist_file="$out_dir"/"$(echo "$dump_name" | sed 's/-all.json//')"-"$lang"-person+artist.tsv
 geographical_file="$out_dir"/"$(echo "$dump_name" | sed 's/-all.json//')"-"$lang"-geographical.tsv
 event_file="$out_dir"/"$(echo "$dump_name" | sed 's/-all.json//')"-"$lang"-event.tsv
 organization_file="$out_dir"/"$(echo "$dump_name" | sed 's/-all.json//')"-"$lang"-organization.tsv
+artwork_file="$out_dir"/"$(echo "$dump_name" | sed 's/-all.json//')"-"$lang"-artwork.tsv
 
 # print warning about extraction of other than czech language
 if [ "$lang" != 'cs' ]; then
@@ -166,7 +167,7 @@ if [ $parser_error_code -ne 0 ]; then
   exit $parser_error_code
 fi
 
-for file in ${persons_file} ${group_file} ${artist_file} ${geographical_file} ${event_file} ${organization_file}
+for file in ${persons_file} ${group_file} ${artist_file} ${geographical_file} ${event_file} ${organization_file} ${artwork_file}
 do
   sed -i "s/^.://" "${file}"
 done
@@ -190,6 +191,7 @@ else
                     -l "$geographical_file"   \
                     -e "$event_file"          \
                     -o "$organization_file"   \
+                    --artwork="${artwork_file}"   \
                     --dump=${dump_name}       \
                     --lang=${lang}
 

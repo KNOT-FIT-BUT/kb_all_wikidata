@@ -145,6 +145,7 @@ wikidata_organization=`getWikidataFilePathForType "${dump_name}" "${lang}" "${ta
 # unmerged data
 wikidata_groups=`getWikidataFilePathForType "${dump_name}" "${lang}" "${tag}" "${wikidata2_path}" "group"`
 wikidata_geographical=`getWikidataFilePathForType "${dump_name}" "${lang}" "${tag}" "${wikidata2_path}" "geographical"`
+wikidata_artwork=`getWikidataFilePathForType "${dump_name}" "${lang}" "${tag}" "${wikidata2_path}" "artwork"`
 
 [ -f "$wikidata_person" ] || { echo "No data for selected language!" >&2; exit 1; }
 
@@ -184,6 +185,7 @@ cp "$wikidata_event" "${tmp_dir}/events/WIKIDATA2"
 # copy unmerged files
 cp "$wikidata_groups" "${output_dir}/groups_wikidata2.tsv"
 cp "$wikidata_geographical" "${output_dir}/geographical_wikidata2.tsv"
+cp "$wikidata_artwork" "${output_dir}/artwork_wikidata2.tsv"
 
 # start merge
 cf="$pwd" # save location

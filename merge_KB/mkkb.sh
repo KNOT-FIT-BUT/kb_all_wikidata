@@ -37,6 +37,7 @@ help() {
 	echo "  --geographical | -l  Geographical KB file."
 	echo "  --event        | -e  Event KB file."
 	echo "  --organization | -o  Organization KB file."
+        echo "  --artwork            Artwork KB file."
 	echo "  --lang               Language of KB."
 	echo "  --dump               Dump version."
 
@@ -144,6 +145,10 @@ while true; do
 			organization_file="$(get_simple_arg_value "$1")"
 			shift
 			;;
+                --artwork=* )
+                        artwork_file="$(get_arg_value "$1")"
+                        shift
+                        ;;
 		--lang=* )
 			lang="$(get_arg_value "$1")"
 			shift
@@ -177,6 +182,7 @@ artist_file=${artist_file:=`get_output_path "artists_merged.tsv"`}
 geographical_file=${geographical_file:=`get_output_path "geographical_wikidata2.tsv"`}
 event_file=${event_file:=`get_output_path "events_merged.tsv"`}
 organization_file=${organization_file:=`get_output_path "organizations_merged.tsv"`}
+artwork_file=${artwork_file:=`get_output_path "artwork_wikidata2.tsv"`}
 
 output_dir=`dirname "${output_file}"`
 
@@ -186,6 +192,6 @@ output_dir=`dirname "${output_file}"`
 echo 'Merging output files into KB'
 
 echo "VERSION=${lang}_wd_${dump_version}_$(date '+%Y%m%d_%H%M%S')" > "$output_file"
-cat "$project_folder"/HEAD "$person_file" "$group_file" "$artist_file" "$geographical_file" "$event_file" "$organization_file" \
+cat "$project_folder"/HEAD "$person_file" "$group_file" "$artist_file" "$geographical_file" "$event_file" "$organization_file" "$artwork_file" \
 >> "$output_file"
 
