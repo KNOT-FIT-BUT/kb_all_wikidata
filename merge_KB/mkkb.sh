@@ -7,6 +7,7 @@
 
 project_folder="$(readlink -f $0 | xargs -I{} dirname {})"
 output_dirname="output"
+stats_path=/mnt/minerva1/nlp/projects/wikipedia_stats2/stats
 
 # unknown args
 unknown=''
@@ -194,4 +195,9 @@ echo 'Merging output files into KB'
 echo "VERSION=${lang}_wd_${dump_version}_$(date '+%Y%m%d_%H%M%S')" > "$output_file"
 cat "$project_folder"/HEAD "$person_file" "$group_file" "$artist_file" "$geographical_file" "$event_file" "$organization_file" "$artwork_file" \
 >> "$output_file"
+
+# Insert stats to KB and compute metrics
+output_file=$(realpath $output_file)
+output_file_stats="${output_file%.*}+stats.${output_file##*.}"
+python3 wikipedia_stats/stats_to_kb.py --input "$output_file" --output "$output_file_stats" --stats "$stats_path/${lang}_wiki.tsv"
 
