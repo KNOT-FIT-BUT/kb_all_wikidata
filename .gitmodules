@@ -1,3 +1,6 @@
 [submodule "merge_KB/kb_tools"]
 	path = merge_KB/kb_tools
 	url = ../kb_tools.git
+[submodule "merge_KB/wikipedia_stats2"]
+	path = merge_KB/wikipedia_stats
+	url = git@github.com:KNOT-FIT-BUT/wikipedia_stats2.git
