@@ -7,7 +7,7 @@
 
 project_folder="$(readlink -f $0 | xargs -I{} dirname {})"
 output_dirname="output"
-stats_path=/mnt/minerva1/nlp/projects/wikipedia_stats2/stats
+stats_path=/mnt/minerva1/nlp-in/wikipedia-statistics/stats
 
 # unknown args
 unknown=''
