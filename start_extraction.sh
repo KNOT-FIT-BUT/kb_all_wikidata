@@ -169,7 +169,7 @@ fi
 
 for file in ${persons_file} ${group_file} ${artist_file} ${geographical_file} ${event_file} ${organization_file} ${artwork_file}
 do
-  sed -i "s/^.://" "${file}"
+  sed -i "s/^[^\t]*://" "${file}"
 done
 
 if [ "$lang" = 'cs' ]; then
