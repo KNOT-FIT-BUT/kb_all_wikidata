@@ -199,5 +199,5 @@ cat "$project_folder"/HEAD "$person_file" "$group_file" "$artist_file" "$geograp
 # Insert stats to KB and compute metrics
 output_file=$(realpath $output_file)
 output_file_stats="${output_file%.*}+stats.${output_file##*.}"
-python3 ${project_folder}/wikipedia_stats/stats_to_kb.py --input "$output_file" --output "$output_file_stats" -bps "$stats_path/bps/${lang}_bps.tsv" -pw "$stats_path/pageviews/${lang}_pageviews.tsv"
+python3 ${project_folder}/wikipedia_stats/stats_to_kb.py --input "$output_file" --output "$output_file_stats" -bps "$stats_path/bps/latest_${lang}_bps.tsv" -pw "$stats_path/pageviews/latest_${lang}_pageviews.tsv"
 
